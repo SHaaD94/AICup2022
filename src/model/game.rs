@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use super::*;
 
 /// Current game's state
@@ -19,6 +20,15 @@ pub struct Game {
     pub zone: model::Zone,
     /// List of sounds heard by your team during last tick
     pub sounds: Vec<model::Sound>,
+}
+
+impl Game {
+    pub fn my_units(&self) -> Vec<&Unit> {
+        self.units.iter().filter(|e| e.player_id == self.my_id).collect_vec()
+    }
+    pub fn enemy_units(&self) -> Vec<&Unit> {
+        self.units.iter().filter(|e| e.player_id != self.my_id).collect_vec()
+    }
 }
 
 impl trans::Trans for Game {
