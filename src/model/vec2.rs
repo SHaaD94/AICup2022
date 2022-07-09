@@ -2,7 +2,7 @@ use std::ops;
 use super::*;
 
 /// 2 dimensional vector.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Vec2 {
     /// `x` coordinate of the vector
     pub x: f64,
