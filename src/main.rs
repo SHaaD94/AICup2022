@@ -68,7 +68,7 @@ impl Runner {
                     let mut debug_interface = self.debug_interface();
                     let message = codegame::ClientMessage::OrderMessage {
                         order: strategy.as_mut().unwrap().get_order(
-                            &player_view,
+                            player_view,
                             if debug_available {
                                 Some(&mut debug_interface)
                             } else {
