@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use libc::clone;
 use crate::model::{Item, Loot, Unit};
 use crate::strategy::holder::{get_constants, get_game};
@@ -6,7 +7,7 @@ pub fn best_loot(unit: &Unit, loots: Vec<&Loot>, intersecting: bool) -> Option<L
     let constants = get_constants();
     let current_weapon = unit.weapon;
     let ammo = unit.ammo.clone();
-    loots.iter()
+    let score2loot = loots.iter()
         .filter(|l| is_inside_zone(l))
         .filter(|l| if !intersecting { unit.position.distance(&l.position) >= constants.unit_radius } else { unit.position.distance(&l.position) < constants.unit_radius })
         .map(|l| {
@@ -43,8 +44,14 @@ pub fn best_loot(unit: &Unit, loots: Vec<&Loot>, intersecting: bool) -> Option<L
             (score.clone(), *l)
         })
         .filter(|e| e.0 > 0)
-        .max_by_key(|e| e.0)
-        .map(|(score, l)| l.clone())
+        .collect_vec();
+    let max = score2loot.iter().max_by_key(|e| e.0);
+    max.map(|(score, _)| {
+        score2loot.iter().filter(|e| e.0 == score.clone())
+            .map(|e| e.1)
+            .min_by_key(|e| e.position.distance(&unit.position).ceil() as i64)
+            .map(|e| e.clone())
+    }).flatten()
 }
 
 fn is_inside_zone(loot: &Loot) -> bool {
