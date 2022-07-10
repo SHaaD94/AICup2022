@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use crate::strategy::holder::get_constants;
 use super::*;
 
 /// Current game's state
@@ -48,7 +49,7 @@ impl Game {
         self.units.iter().filter(|e| e.player_id != self.my_id).collect_vec()
     }
     pub fn intersecting_loot(&self, unit: &Unit) -> Vec<&Loot> {
-        self.loot.iter().filter(|l| unit.position.distance(&l.position.clone()) < 5.0).collect_vec()
+        self.loot.iter().filter(|l| unit.position.distance(&l.position.clone()) < get_constants().unit_radius).collect_vec()
     }
 }
 
