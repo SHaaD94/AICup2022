@@ -12,3 +12,4 @@
 8. Remember the map of entities
 9. Try dodging the bullet
 10. Must have a priority for picking up items
+11. Must remain inside of AREA

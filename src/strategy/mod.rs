@@ -15,8 +15,8 @@ pub fn get_order() -> model::Order {
 
     let orders: HashMap<i32, UnitOrder> = game.my_units().into_iter().map(|u| {
         let intersected_loot = game.intersecting_loot(u);
-        let valuable_loot = game.loot.iter().find_or_first(|l| item_filter(constants, u, l)).map(|e| e.clone());
-        let loot_to_pick = intersected_loot.iter().find_or_first(|l| item_filter(constants, u, l));
+        let valuable_loot = game.loot.iter().find(|l| item_filter(constants, u, l)).map(|e| e.clone());
+        let loot_to_pick = intersected_loot.iter().find(|l| item_filter(constants, u, l));
 
         let target_direction = game.enemy_units().iter()
             .min_by_key(|e| (e.position.distance(&u.position) * 1000.0).ceil() as i64)
@@ -54,7 +54,7 @@ pub fn get_order() -> model::Order {
 
 fn item_filter(constants: &Constants, u: &Unit, l: &Loot) -> bool {
     match l.item {
-        Item::Weapon { type_index } => { type_index > u.weapon.unwrap_or(-1) && u.ammo[type_index as usize] > 0 as i32}
+        Item::Weapon { type_index } => { type_index > u.weapon.unwrap_or(-1) && u.ammo[type_index as usize] > 0 as i32 }
         Item::ShieldPotions { amount } => { u.shield_potions < constants.max_shield_potions_in_inventory }
         Item::Ammo { weapon_type_index, amount } => { true }
     }
