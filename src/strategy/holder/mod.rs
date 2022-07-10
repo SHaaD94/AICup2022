@@ -21,6 +21,8 @@ pub fn get_game() -> &'static Game { unsafe { &GAME } }
 
 pub fn get_units() -> &'static Vec<Unit> { unsafe { &UNITS } }
 
+pub fn get_loot() -> &'static Vec<Loot> { unsafe { &LOOT } }
+
 pub fn set_constants(constants: Constants) { unsafe { CONSTANTS = constants } }
 
 pub fn get_obstacles(unit_id: i32) -> Vec<Obstacle> {
@@ -33,6 +35,7 @@ pub fn update_game(game: Game) {
 
     set_nearest_obstacles(&game, constants);
     update_units(&game);
+    update_loot(&game);
 
     unsafe { GAME = game }
 }
@@ -52,6 +55,23 @@ fn update_units(game: &Game) {
     }
     unsafe { UNIT_TO_TICK = units_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
     unsafe { UNITS = units_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
+}
+
+fn update_loot(game: &Game) {
+    let loot_ttl = 150;
+    let mut loot_hashmap = HashMap::new();
+    for x in &game.loot {
+        loot_hashmap.insert(x.id, (loot_ttl, x.clone()));
+    }
+    for x in unsafe { &LOOT_TO_TICK } {
+        if !loot_hashmap.contains_key(&x.1.id) {
+            if x.0 - 1 > 0 {
+                loot_hashmap.insert(x.1.id, (x.0 - 1, x.1.clone()));
+            }
+        }
+    }
+    unsafe { LOOT_TO_TICK = loot_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
+    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
 }
 
 fn set_nearest_obstacles(game: &Game, constants: &Constants) {

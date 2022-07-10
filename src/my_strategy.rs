@@ -3,11 +3,11 @@ use std::sync::atomic::AtomicPtr;
 use itertools::Itertools;
 use crate::debug_interface::DebugInterface;
 use ai_cup_22::*;
-use ai_cup_22::debugging::{BLUE, Color, GREEN, RED};
+use ai_cup_22::debugging::{BLUE, Color, GREEN, RED, TEAL};
 use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
 use ai_cup_22::model::ActionOrder::Aim;
 use ai_cup_22::strategy::get_order;
-use ai_cup_22::strategy::holder::{get_constants, get_game, get_obstacles, get_units, set_constants, update_game};
+use ai_cup_22::strategy::holder::{get_constants, get_game, get_loot, get_obstacles, get_units, set_constants, update_game};
 
 pub struct MyStrategy {}
 
@@ -34,6 +34,10 @@ impl MyStrategy {
                 // draw units
                 for x in get_units() {
                     debug.add_circle(x.position.clone(), get_constants().unit_radius, BLUE.clone())
+                }
+                // draw loot
+                for x in get_loot() {
+                    debug.add_circle(x.position.clone(), 0.5, TEAL.clone())
                 }
                 // draw obstacles
                 // for unit in game.my_units() {
