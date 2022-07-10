@@ -34,8 +34,7 @@ impl MyStrategy {
                 // for x in get_projectiles() {
                 //     debug.add_circle(x.position.clone(), 0.5, BLUE.clone())
                 // }
-                // draw obstacles
-                // Self::draw_obstacles(debug)
+                Self::draw_obstacles(debug)
             }
         }
         get_order()
@@ -44,7 +43,7 @@ impl MyStrategy {
     fn draw_obstacles(debug: &mut DebugInterface) {
         for unit in get_game().my_units() {
             for obstacle in get_obstacles(unit.id) {
-                debug.add_circle(obstacle.position.clone(), obstacle.radius, GREEN.clone())
+                debug.add_circle(obstacle.position.clone(), obstacle.radius, GREEN.clone());
             }
         }
     }
