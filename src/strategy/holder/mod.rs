@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use itertools::Itertools;
-use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit};
+use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit, Vec2};
 
 static mut GAME: Game = Game::const_default();
 static mut CONSTANTS: Constants = Constants::const_default();
@@ -12,7 +12,6 @@ static mut LOOT: Vec<Loot> = vec![];
 static mut UNIT_TO_TICK: Vec<(i32, Unit)> = vec![];
 static mut UNITS: Vec<Unit> = vec![];
 
-static mut PROJECTILES_TO_TICK: Vec<(i32, Projectile)> = vec![];
 static mut PROJECTILES: Vec<Projectile> = vec![];
 
 pub fn get_constants() -> &'static Constants { unsafe { &CONSTANTS } }
@@ -22,6 +21,8 @@ pub fn get_game() -> &'static Game { unsafe { &GAME } }
 pub fn get_units() -> &'static Vec<Unit> { unsafe { &UNITS } }
 
 pub fn get_loot() -> &'static Vec<Loot> { unsafe { &LOOT } }
+
+pub fn get_projectiles() -> &'static Vec<Projectile> { unsafe { &PROJECTILES } }
 
 pub fn set_constants(constants: Constants) { unsafe { CONSTANTS = constants } }
 
@@ -36,6 +37,7 @@ pub fn update_game(game: Game) {
     set_nearest_obstacles(&game, constants);
     update_units(&game);
     update_loot(&game);
+    update_projectiles(&game);
 
     unsafe { GAME = game }
 }
@@ -72,6 +74,39 @@ fn update_loot(game: &Game) {
     }
     unsafe { LOOT_TO_TICK = loot_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
     unsafe { LOOT = loot_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
+}
+
+fn update_projectiles(game: &Game) {
+    let ticks_per_second = get_constants().ticks_per_second;
+    let mut projectiles_map = HashMap::new();
+    for x in &game.projectiles {
+        projectiles_map.insert(x.id, x.clone());
+    }
+    for x in unsafe { &PROJECTILES } {
+        if !projectiles_map.contains_key(&x.id) {
+            let life_time_after = (x.life_time * ticks_per_second - 1.0) / ticks_per_second;
+            let new_pos = x.position.clone() + x.velocity.clone() / ticks_per_second;
+            let intersects_with_units = game.units.iter()
+                .find(|e| e.position.distance(&new_pos) < get_constants().unit_radius).is_some();
+            let intersects_with_obstacles = game.my_units().iter().map(|u| get_obstacles(u.id)).flatten()
+                .filter(|e| !e.can_shoot_through)
+                .map(|e| e.position)
+                .find(|e| e.distance(&new_pos) < get_constants().unit_radius).is_some();
+
+            if life_time_after > 0.0 && !intersects_with_units && !intersects_with_obstacles {
+                projectiles_map.insert(x.id, Projectile {
+                    life_time: life_time_after,
+                    id: x.id,
+                    weapon_type_index: x.weapon_type_index,
+                    shooter_id: x.shooter_id,
+                    shooter_player_id: x.shooter_player_id,
+                    position: new_pos,
+                    velocity: x.velocity.clone(),
+                });
+            }
+        }
+    }
+    unsafe { PROJECTILES = projectiles_map.iter().map(|e| e.1.clone()).collect_vec() };
 }
 
 fn set_nearest_obstacles(game: &Game, constants: &Constants) {

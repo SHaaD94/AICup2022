@@ -27,12 +27,32 @@ impl ops::Sub<Vec2> for Vec2 {
     }
 }
 
+impl ops::Add<Vec2> for Vec2 {
+    type Output = Vec2;
+    fn add(self, rhs: Vec2) -> Self::Output {
+        Vec2 {
+            x: rhs.x + self.x,
+            y: rhs.y + self.y,
+        }
+    }
+}
+
 impl ops::Mul<f64> for Vec2 {
     type Output = Vec2;
     fn mul(self, rhs: f64) -> Self::Output {
         Vec2 {
             x: self.x * rhs,
             y: self.y * rhs,
+        }
+    }
+}
+
+impl ops::Div<f64> for Vec2 {
+    type Output = Vec2;
+    fn div(self, rhs: f64) -> Self::Output {
+        Vec2 {
+            x: self.x / rhs,
+            y: self.y / rhs,
         }
     }
 }
