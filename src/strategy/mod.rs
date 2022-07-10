@@ -17,7 +17,7 @@ pub fn get_order() -> model::Order {
     let constants = get_constants();
 
     let behaviours: Vec<Box<dyn Behaviour>> = vec![
-        // Box::new(Fighting {}),
+        Box::new(Fighting {}),
         Box::new(MoveToCenterOrLoot {})];
 
     let orders: HashMap<i32, UnitOrder> = game.my_units().into_iter().map(|u| {

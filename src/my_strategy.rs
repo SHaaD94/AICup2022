@@ -31,11 +31,11 @@ impl MyStrategy {
                 // Self::draw_units(debug);
                 // Self::draw_loot(debug);
                 //draw projectiles
-                for x in get_projectiles() {
-                    debug.add_circle(x.position.clone(), 0.5, BLUE.clone())
-                }
+                // for x in get_projectiles() {
+                //     debug.add_circle(x.position.clone(), 0.5, BLUE.clone())
+                // }
                 // draw obstacles
-                Self::draw_obstacles(debug)
+                // Self::draw_obstacles(debug)
             }
         }
         get_order()

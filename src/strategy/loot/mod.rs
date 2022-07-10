@@ -3,7 +3,7 @@ use libc::clone;
 use crate::model::{Item, Loot, Unit};
 use crate::strategy::holder::{get_constants, get_game};
 
-pub fn best_loot(unit: &Unit, loots: Vec<&Loot>, intersecting: bool) -> Option<Loot> {
+pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<Loot> {
     let constants = get_constants();
     let current_weapon = unit.weapon;
     let ammo = unit.ammo.clone();
@@ -41,7 +41,7 @@ pub fn best_loot(unit: &Unit, loots: Vec<&Loot>, intersecting: bool) -> Option<L
                     }
                 }
             };
-            (score.clone(), *l)
+            (score.clone(), l)
         })
         .filter(|e| e.0 > 0)
         .collect_vec();

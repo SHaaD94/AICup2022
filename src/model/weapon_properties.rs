@@ -31,6 +31,12 @@ pub struct WeaponProperties {
     pub max_inventory_ammo: i32,
 }
 
+impl WeaponProperties {
+    pub fn firing_distance(&self) -> f64 {
+        self.projectile_speed * self.projectile_life_time
+    }
+}
+
 impl trans::Trans for WeaponProperties {
     fn write_to(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         self.name.write_to(writer)?;

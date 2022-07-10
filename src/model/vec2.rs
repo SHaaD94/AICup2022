@@ -21,8 +21,8 @@ impl ops::Sub<Vec2> for Vec2 {
     type Output = Vec2;
     fn sub(self, rhs: Vec2) -> Self::Output {
         Vec2 {
-            x: rhs.x - self.x,
-            y: rhs.y - self.y,
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
         }
     }
 }
