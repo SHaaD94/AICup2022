@@ -18,7 +18,6 @@ pub fn does_intersect(x1: f64, y1: f64, x2: f64, y2: f64, obstacles: &Vec<Obstac
             ((x2 - x1).powf(2.0) + (y2 - y1).powf(2.0)).sqrt();
 
         if dist < obs.radius && !obs.can_shoot_through {
-            println!("{} {}", dist, obs.radius);
             return true;
         }
     }

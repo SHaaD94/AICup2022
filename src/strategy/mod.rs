@@ -10,13 +10,14 @@ use crate::model;
 use crate::model::{ActionOrder, Constants, Game, Item, Loot, Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Aim;
 use crate::strategy::holder::{get_constants, get_game};
-use crate::strategy::module::{Behaviour, Fighting, MoveToCenterOrLoot};
+use crate::strategy::module::{Behaviour, Fighting, MoveToCenterOrLoot, UseHeal};
 
 pub fn get_order() -> model::Order {
     let game = get_game();
     let constants = get_constants();
 
     let behaviours: Vec<Box<dyn Behaviour>> = vec![
+        Box::new(UseHeal {}),
         Box::new(Fighting {}),
         Box::new(MoveToCenterOrLoot {})];
 

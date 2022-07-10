@@ -34,7 +34,7 @@ impl MyStrategy {
                 // for x in get_projectiles() {
                 //     debug.add_circle(x.position.clone(), 0.5, BLUE.clone())
                 // }
-                Self::draw_obstacles(debug)
+                // Self::draw_obstacles(debug)
             }
         }
         get_order()

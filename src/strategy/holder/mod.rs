@@ -22,6 +22,17 @@ pub fn get_units() -> &'static Vec<Unit> { unsafe { &UNITS } }
 
 pub fn get_loot() -> &'static Vec<Loot> { unsafe { &LOOT } }
 
+pub unsafe fn remove_loot(id_to_remove: i32) {
+    let mut res = Vec::new();
+    for x in &LOOT_TO_TICK {
+        if x.0 != id_to_remove {
+            res.push((x.clone()));
+        }
+    }
+    LOOT_TO_TICK = res;
+    unsafe { LOOT = LOOT_TO_TICK.iter().map(|e| e.1.clone()).collect_vec() };
+}
+
 pub fn get_projectiles() -> &'static Vec<Projectile> { unsafe { &PROJECTILES } }
 
 pub fn set_constants(constants: Constants) { unsafe { CONSTANTS = constants } }

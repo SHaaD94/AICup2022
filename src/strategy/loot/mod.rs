@@ -27,7 +27,7 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
                 }
                 Item::ShieldPotions { amount } => {
                     if unit.shield_potions < constants.max_shield_potions_in_inventory {
-                        (75.0 / unit.health / constants.unit_health).ceil() as i32
+                        (300.0 / unit.health / constants.unit_health).ceil() as i32
                     } else {
                         0
                     }
