@@ -1,6 +1,6 @@
 pub mod util;
 pub mod holder;
-mod behaviour;
+pub mod behaviour;
 pub mod loot;
 pub mod potential_field;
 
