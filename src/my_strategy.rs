@@ -28,8 +28,8 @@ impl MyStrategy {
             None => {}
             Some(debug) => {
                 // Self::draw_sounds(debug);
-                // Self::draw_units(debug);
-                // Self::draw_loot(debug);
+                Self::draw_units(debug);
+                Self::draw_loot(debug);
                 //draw projectiles
                 // for x in get_projectiles() {
                 //     debug.add_circle(x.position.clone(), 0.5, BLUE.clone())
