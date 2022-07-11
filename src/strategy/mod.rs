@@ -33,7 +33,7 @@ pub fn get_order(mut debug_interface: Option<&mut DebugInterface>) -> model::Ord
             target_direction: Default::default(),
             action: None,
         };
-        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
+        if let Some(debug) = debug_interface.as_mut() {
             // debug.add_circle(u.position.clone(), 23.0, GREEN.clone())
         }
         for behaviour in &behaviours {

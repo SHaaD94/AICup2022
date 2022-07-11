@@ -28,7 +28,7 @@ impl Behaviour for Fighting {
 
         let target = get_units().iter().min_by_key(|e| e.position.distance(&unit.position) as i64).unwrap();
 
-        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
+        if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(target.position.clone(), 0.5, RED.clone());
         }
 

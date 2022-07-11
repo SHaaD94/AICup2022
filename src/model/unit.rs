@@ -1,5 +1,6 @@
 use std::f64::consts::PI;
-use crate::strategy::holder::get_constants;
+use crate::strategy::holder::{get_constants, get_obstacles};
+use crate::strategy::util::rotate;
 use super::*;
 
 /// A unit
@@ -40,6 +41,27 @@ pub struct Unit {
 }
 
 impl Unit {
+    pub fn points_around_unit(&self) -> Vec<Vec2> {
+        let points_around = 10;
+        let angle_diff = 2.0 * PI / points_around as f64;
+        let mut res = Vec::new();
+        let mut cur_angle = self.direction.angle();
+        let obstacles = get_obstacles(self.id);
+        for _ in 0..points_around {
+            let next_vec = rotate(self.position.clone(), cur_angle,
+                                  get_constants().max_unit_forward_speed / get_constants().ticks_per_second);
+            let intersects_with_obstacles = obstacles.iter()
+                .find(|o| o.position.distance(&next_vec) < o.radius + get_constants().unit_radius)
+                .is_some();
+            if !intersects_with_obstacles {
+                res.push(next_vec);
+            }
+            cur_angle += angle_diff;
+        }
+
+        res
+    }
+
     pub fn view_segment_angles(&self) -> (f64, f64) {
         let default_view = get_constants().field_of_view;
         let view_angle = self.weapon.map(|e|
@@ -53,10 +75,6 @@ impl Unit {
 
     pub fn view_segment(&self) -> (Vec2, Vec2) {
         let (left_angle, right_angle) = self.view_segment_angles();
-
-        fn rotate(center: Vec2, angle: f64, distance: f64) -> Vec2 {
-            center + Vec2 { x: angle.cos() * distance, y: angle.sin() * distance }
-        }
 
         let first = rotate(
             self.position.clone(),

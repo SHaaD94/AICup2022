@@ -25,15 +25,15 @@ impl MyStrategy {
     ) -> model::Order {
         update_game(game);
 
-        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
+        if let Some(debug) = debug_interface.as_mut() {
             // Self::draw_sounds(debug);
-            Self::draw_vision(debug);
+            // Self::draw_vision(debug);
             Self::draw_units(debug);
             Self::draw_loot(debug);
             // Self::draw_projectiles(debug)
             // Self::draw_obstacles(debug)
         }
-        get_order(debug_interface.as_mut().map(|x| &mut **x))
+        get_order(debug_interface)
     }
 
     fn draw_vision(debug: &mut DebugInterface) {

@@ -1,5 +1,5 @@
 use crate::debug_interface::DebugInterface;
-use crate::debugging::BLUE;
+use crate::debugging::{BLUE, GREEN, TRANSPARENT_BLUE, TRANSPARENT_GREEN};
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Pickup;
 use crate::strategy::behaviour::behaviour::Behaviour;
@@ -24,11 +24,13 @@ impl Behaviour for MoveToCenterOrLoot {
         if let Some(loot) = &best_intersecting_loot {
             unsafe { remove_loot(loot.id.clone()); }
         }
-        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
-            if let Some(ref loot) = best_not_intersecting_loot{
+        if let Some(debug) = debug_interface.as_mut() {
+            if let Some(ref loot) = best_not_intersecting_loot {
                 debug.add_circle(loot.position.clone(), 0.3, BLUE.clone());
             }
-
+            for p in unit.points_around_unit() {
+                debug.add_circle(p, 0.5, TRANSPARENT_BLUE.clone());
+            }
         }
 
         UnitOrder {
