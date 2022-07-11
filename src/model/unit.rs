@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+use crate::strategy::holder::get_constants;
 use super::*;
 
 /// A unit
@@ -35,6 +37,37 @@ pub struct Unit {
     pub ammo: Vec<i32>,
     /// Number of shield potions in inventory
     pub shield_potions: i32,
+}
+
+impl Unit {
+    pub fn view_segment_angles(&self) -> (f64, f64) {
+        let default_view = get_constants().field_of_view;
+        let view_angle = self.weapon.map(|e|
+            default_view - (default_view - get_constants().weapons[e as usize].aim_field_of_view) * self.aim)
+            .unwrap_or(default_view) * PI / 180.0;
+
+        let left_angle = self.direction.angle() - view_angle / 2.0;
+        let right_angle = self.direction.angle() + view_angle / 2.0;
+        (left_angle, right_angle)
+    }
+
+    pub fn view_segment(&self) -> (Vec2, Vec2) {
+        let (left_angle, right_angle) = self.view_segment_angles();
+
+        fn rotate(center: Vec2, angle: f64, distance: f64) -> Vec2 {
+            center + Vec2 { x: angle.cos() * distance, y: angle.sin() * distance }
+        }
+
+        let first = rotate(
+            self.position.clone(),
+            left_angle,
+            get_constants().view_distance);
+        let second = rotate(
+            self.position.clone(),
+            right_angle,
+            get_constants().view_distance);
+        (first, second)
+    }
 }
 
 impl trans::Trans for Unit {
