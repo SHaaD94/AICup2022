@@ -7,9 +7,9 @@ use crate::strategy::behaviour::behaviour::Behaviour;
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
 use crate::strategy::util::{does_intersect, rotate};
 
-pub struct UseHeal {}
+pub struct RunAndHeal {}
 
-impl Behaviour for UseHeal {
+impl Behaviour for RunAndHeal {
     fn should_use(&self, unit: &Unit) -> bool {
         unit.health < get_constants().unit_health * 0.5 || unit.shield < get_constants().max_shield && unit.shield_potions > 0
     }
@@ -46,19 +46,19 @@ impl Behaviour for UseHeal {
                 }
             }
         }
+        let result_move = unit.points_around_unit().iter()
+            .min_by_key(|e| (e.distance(&unit.position) + e.distance(&top_point).ceil() * 1000.0) as i32).unwrap().clone();
+
         if let Some(debug) = debug_interface.as_mut() {
-            // for p in points_to_check {
-            //     debug.add_circle(p, 0.1, RED.clone())
-            // }
             debug.add_circle(top_point.clone(), 1.0, RED.clone())
         }
         let rotation = if get_game().current_tick % 100 >= 85 {
             Vec2 { x: -unit.direction.y, y: unit.direction.x }
         } else {
-            top_point.clone() - unit.position.clone()
+            result_move.clone() - unit.position.clone()
         };
         UnitOrder {
-            target_velocity: top_point - unit.position.clone(),
+            target_velocity: result_move - unit.position.clone(),
             target_direction: rotation,
             action: Some(UseShieldPotion {}),
         }
