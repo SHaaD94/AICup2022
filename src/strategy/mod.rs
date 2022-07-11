@@ -11,7 +11,10 @@ use crate::model;
 use crate::model::{ActionOrder, Constants, Game, Item, Loot, Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Aim;
 use crate::strategy::holder::{get_constants, get_game};
-use crate::strategy::behaviour::{Behaviour, Fighting, MoveToCenterOrLoot, UseHeal};
+use crate::strategy::behaviour::behaviour::Behaviour;
+use crate::strategy::behaviour::fighting::Fighting;
+use crate::strategy::behaviour::move_or_loot::MoveToCenterOrLoot;
+use crate::strategy::behaviour::use_heal::UseHeal;
 
 pub fn get_order() -> model::Order {
     let game = get_game();
