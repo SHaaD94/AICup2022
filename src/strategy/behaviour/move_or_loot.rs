@@ -29,7 +29,7 @@ impl Behaviour for MoveToCenterOrLoot {
             .min_by_key(|e| (-e.distance(&unit.position) + e.distance(&move_target).ceil() * 1000.0) as i32).unwrap().clone();
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
-            debug.add_circle(move_target.clone(), -0.5, TRANSPARENT_BLUE.clone());
+            debug.add_circle(move_target.clone(), 0.5, TRANSPARENT_BLUE.clone());
         }
         UnitOrder {
             target_velocity: (result_move.clone() - unit.position.clone()) * 1000.0,

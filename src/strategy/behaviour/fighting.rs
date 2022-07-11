@@ -1,6 +1,6 @@
 use std::cmp::min;
 use crate::debug_interface::DebugInterface;
-use crate::debugging::RED;
+use crate::debugging::{RED, TRANSPARENT_BLUE};
 use crate::model::{Unit, UnitOrder};
 use crate::model::ActionOrder::Aim;
 use crate::strategy::behaviour::behaviour::Behaviour;
@@ -40,9 +40,16 @@ impl Behaviour for Fighting {
             &get_obstacles(unit.id),
         );
         let vector = target.position.clone() - unit.position.clone();
+        let goal = vector;
+        let result_move = unit.points_around_unit().iter()
+            .min_by_key(|e| (-e.distance(&unit.position) + e.distance(&goal).ceil() * 1000.0) as i32).unwrap().clone();
+        if let Some(debug) = debug_interface.as_mut() {
+            debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
+            debug.add_circle(goal.clone(), 0.5, TRANSPARENT_BLUE.clone());
+        }
 
         UnitOrder {
-            target_velocity: if simulation(unit, target) { vector } else { vector * -1.0 },
+            target_velocity: result_move - unit.position.clone(),
             target_direction: target.position.clone() - unit.position.clone(),
             action: Some(Aim {
                 shoot: !intersects_with_obstacles
