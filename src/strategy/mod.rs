@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::ops::Index;
 use itertools::Itertools;
 use crate::debug_interface::DebugInterface;
+use crate::debugging::GREEN;
 use crate::model;
 use crate::model::{ActionOrder, Constants, Game, Item, Loot, Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Aim;
@@ -17,7 +18,7 @@ use crate::strategy::behaviour::fighting::Fighting;
 use crate::strategy::behaviour::move_or_loot::MoveToCenterOrLoot;
 use crate::strategy::behaviour::use_heal::UseHeal;
 
-pub fn get_order(option: Option<&mut DebugInterface>) -> model::Order {
+pub fn get_order(mut debug_interface: Option<&mut DebugInterface>) -> model::Order {
     let game = get_game();
     let constants = get_constants();
 
@@ -32,9 +33,12 @@ pub fn get_order(option: Option<&mut DebugInterface>) -> model::Order {
             target_direction: Default::default(),
             action: None,
         };
+        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
+            // debug.add_circle(u.position.clone(), 23.0, GREEN.clone())
+        }
         for behaviour in &behaviours {
             if behaviour.should_use(u) {
-                order = behaviour.order(u);
+                order = behaviour.order(u, debug_interface.as_mut().map(|x| &mut **x));
                 break;
             }
         }

@@ -1,3 +1,4 @@
+use crate::debug_interface::DebugInterface;
 use crate::model::{Unit, UnitOrder};
 use crate::model::ActionOrder::UseShieldPotion;
 use crate::strategy::behaviour::behaviour::Behaviour;
@@ -10,7 +11,7 @@ impl Behaviour for UseHeal {
         unit.shield < get_constants().max_shield && unit.shield_potions > 0
     }
 
-    fn order(&self, unit: &Unit) -> UnitOrder {
+    fn order(&self, unit: &Unit, mut debug_interface: Option<&mut DebugInterface>) -> UnitOrder {
         UnitOrder {
             target_velocity: unit.velocity.clone(),
             target_direction: unit.direction.clone(),

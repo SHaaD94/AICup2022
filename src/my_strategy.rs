@@ -21,22 +21,19 @@ impl MyStrategy {
     pub fn get_order(
         &mut self,
         game: Game,
-        debug_interface: Option<&mut DebugInterface>,
+        mut debug_interface: Option<&mut DebugInterface>,
     ) -> model::Order {
         update_game(game);
 
-        match debug_interface {
-            None => get_order(None),
-            Some(debug) => {
-                // Self::draw_sounds(debug);
-                Self::draw_vision(debug);
-                Self::draw_units(debug);
-                Self::draw_loot(debug);
-                // Self::draw_projectiles(debug)
-                // Self::draw_obstacles(debug)
-                get_order(Some(debug))
-            }
+        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
+            // Self::draw_sounds(debug);
+            Self::draw_vision(debug);
+            Self::draw_units(debug);
+            Self::draw_loot(debug);
+            // Self::draw_projectiles(debug)
+            // Self::draw_obstacles(debug)
         }
+        get_order(debug_interface.as_mut().map(|x| &mut **x))
     }
 
     fn draw_vision(debug: &mut DebugInterface) {

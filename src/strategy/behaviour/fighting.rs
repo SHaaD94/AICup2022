@@ -1,4 +1,6 @@
 use std::cmp::min;
+use crate::debug_interface::DebugInterface;
+use crate::debugging::RED;
 use crate::model::{Unit, UnitOrder};
 use crate::model::ActionOrder::Aim;
 use crate::strategy::behaviour::behaviour::Behaviour;
@@ -20,11 +22,15 @@ impl Behaviour for Fighting {
         ).is_some()
     }
 
-    fn order(&self, unit: &Unit) -> UnitOrder {
+    fn order(&self, unit: &Unit, mut debug_interface: Option<&mut DebugInterface>) -> UnitOrder {
         let game = get_game();
         let constants = get_constants();
 
         let target = get_units().iter().min_by_key(|e| e.position.distance(&unit.position) as i64).unwrap();
+
+        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
+            debug.add_circle(target.position.clone(), 0.5, RED.clone());
+        }
 
         let intersects_with_obstacles = does_intersect(
             unit.position.x,

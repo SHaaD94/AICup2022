@@ -1,4 +1,5 @@
 use std::cmp::min;
+use crate::debug_interface::DebugInterface;
 use crate::model::{Obstacle, Vec2};
 use crate::strategy::holder::get_constants;
 

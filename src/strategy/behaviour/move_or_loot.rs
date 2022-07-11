@@ -1,3 +1,5 @@
+use crate::debug_interface::DebugInterface;
+use crate::debugging::BLUE;
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Pickup;
 use crate::strategy::behaviour::behaviour::Behaviour;
@@ -9,7 +11,7 @@ pub struct MoveToCenterOrLoot {}
 impl Behaviour for MoveToCenterOrLoot {
     fn should_use(&self, unit: &Unit) -> bool { true }
 
-    fn order(&self, unit: &Unit) -> UnitOrder {
+    fn order(&self, unit: &Unit, mut debug_interface: Option<&mut DebugInterface>) -> UnitOrder {
         let game = get_game();
         let constants = get_constants();
         let loot = get_loot();
@@ -22,6 +24,13 @@ impl Behaviour for MoveToCenterOrLoot {
         if let Some(loot) = &best_intersecting_loot {
             unsafe { remove_loot(loot.id.clone()); }
         }
+        if let Some(debug) = debug_interface.as_mut().map(|x| &mut **x) {
+            if let Some(ref loot) = best_not_intersecting_loot{
+                debug.add_circle(loot.position.clone(), 0.3, BLUE.clone());
+            }
+
+        }
+
         UnitOrder {
             target_velocity: (best_not_intersecting_loot.as_ref().map(|l| l.position.clone()).unwrap_or(next_zone_center.clone()) - unit.position.clone()) * 1000.0,
             target_direction: best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center) - unit.position.clone(),
