@@ -27,13 +27,51 @@ impl MyStrategy {
         match debug_interface {
             None => {}
             Some(debug) => {
+                for u in get_game().my_units() {
+                    let default_view = get_constants().field_of_view;
+                    let view_angle = u.weapon.map(|e|
+                        default_view - (default_view * get_constants().weapons[e as usize].aim_field_of_view) * u.aim)
+                        .unwrap_or(default_view);
+
+                    fn rotate(center: Vec2, angle: f64, distance: f64) -> Vec2 {
+                        center + Vec2 { x: angle.cos() * distance, y: angle.sin() * distance }
+                    }
+                    debug.add_poly_line(Vec::from([
+                        u.position.clone(),
+                        u.position.clone() + u.direction.clone(),
+                    ]), 0.3, BLUE.clone());
+                    debug.add_poly_line(Vec::from([
+                        u.position.clone(),
+                        rotate(
+                            u.position.clone(),
+                            u.direction.angle(),
+                            get_constants().view_distance),
+                    ]), 0.1, GREEN.clone());
+                    // debug.add_poly_line(Vec::from([
+                    //     u.position.clone(),
+                    //     rotate(
+                    //         u.position.clone(),
+                    //         u.direction.angle() + view_angle / 2.0,
+                    //         get_constants().view_distance),
+                    // ]), 0.1, GREEN.clone());
+                    // debug.add_poly_line(Vec::from([
+                    //     u.position.clone(),
+                    //     rotate(
+                    //         u.position.clone(),
+                    //         u.direction.angle() - view_angle / 2.0,
+                    //         get_constants().view_distance),
+                    // ]), 0.1, GREEN.clone());
+                    // let first = rotate(u.position.clone(), u.direction.clone(), view_angle / 2.0);
+                    // let second = rotate(u.position.clone(), u.direction.clone(), -view_angle / 2.0);
+                    // debug.add_segment(first, second, get_constants().view_distance, GREEN.clone());
+                }
                 // Self::draw_sounds(debug);
                 Self::draw_units(debug);
                 Self::draw_loot(debug);
                 //draw projectiles
-                // for x in get_projectiles() {
-                //     debug.add_circle(x.position.clone(), 0.5, BLUE.clone())
-                // }
+                for x in get_projectiles() {
+                    debug.add_circle(x.position.clone(), 0.5, BLUE.clone())
+                }
                 // Self::draw_obstacles(debug)
             }
         }

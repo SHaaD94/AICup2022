@@ -58,6 +58,18 @@ impl ops::Div<f64> for Vec2 {
 }
 
 impl Vec2 {
+    pub fn len(&self) -> f64 {
+        (self.x.powf(2.0) + self.y.powf(2.0)).sqrt()
+    }
+    //https://ru.onlinemschool.com/math/library/vector/angl/
+    pub fn angle(&self) -> f64 {
+        let other_x = 1.0;
+        let other_y = 0.0;
+        let top = self.x * other_x + self.y * other_y;
+        let res = top / self.len();
+        println!("({}), top :{}, {}, {}", self, top, res, res.acos());
+        if self.y < 0.0 { -res.acos() } else { res.acos() }
+    }
     pub fn distance(&self, other: &Vec2) -> f64 {
         ((self.x - other.x).powf(2.0) + (self.y - other.y).powf(2.0)).sqrt()
     }
