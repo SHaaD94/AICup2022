@@ -64,7 +64,7 @@ impl Behaviour for Fighting {
         };
         if !have_weapon_and_ammo { return false; };
 
-        get_units().iter().find(|e|
+        get_units().iter().filter(|e| simulation(unit, e)).find(|e|
             e.position.distance(&unit.position) < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
         ).is_some()
     }
@@ -83,45 +83,7 @@ impl Behaviour for Fighting {
             &get_obstacles(unit.id),
         );
         let vector = target.position.clone() - unit.position.clone();
-        fn simulation(u1: &Unit, u2: &Unit) -> bool {
-            if u1.weapon.is_none() { return false; }
-            if u2.weapon.is_none() { return true; }
-            let constants = get_constants();
-            let mut ammo1 = u1.ammo[u1.weapon.unwrap() as usize];
-            let w1 = &constants.weapons[u1.weapon.unwrap() as usize];
-            let mut h1 = u1.health;
-            let mut ammo2 = u2.ammo[u2.weapon.unwrap() as usize];
-            let w2 = u2.ammo[u2.weapon.unwrap() as usize];
-            let mut h2 = u2.health;
-            let w2 = &constants.weapons[u2.weapon.unwrap() as usize];
 
-            let mut tick1 = 0;
-            let mut tick2 = 0;
-            while h1 >= 0.0 && h2 >= 0.0 {
-                if ammo1 == 0 {
-                    h1 = 0.0;
-                    break;
-                }
-                if ammo2 == 0 {
-                    h2 = 0.0;
-                    break;
-                }
-                let min = min(tick1, tick2);
-                tick1 -= min;
-                tick2 -= min;
-                if tick1 == 0 {
-                    tick1 += (w1.rounds_per_second / constants.ticks_per_second).ceil() as i32;
-                    h2 -= w1.projectile_damage;
-                    ammo1 -= 1;
-                }
-                if tick2 == 0 {
-                    tick2 += (w2.rounds_per_second / constants.ticks_per_second).ceil() as i32;
-                    h1 -= w2.projectile_damage;
-                    ammo2 -= 1;
-                }
-            }
-            return h1 > 0.0;
-        }
         UnitOrder {
             target_velocity: if simulation(unit, target) { vector } else { vector * -1.0 },
             target_direction: target.position.clone() - unit.position.clone(),
@@ -130,4 +92,43 @@ impl Behaviour for Fighting {
             }),
         }
     }
+}
+
+fn simulation(u1: &Unit, u2: &Unit) -> bool {
+    if u1.weapon.is_none() { return false; }
+    if u2.weapon.is_none() { return true; }
+    let constants = get_constants();
+    let mut ammo1 = u1.ammo[u1.weapon.unwrap() as usize];
+    let w1 = &constants.weapons[u1.weapon.unwrap() as usize];
+    let mut h1 = u1.health;
+    let mut ammo2 = u2.ammo[u2.weapon.unwrap() as usize];
+    let w2 = &constants.weapons[u2.weapon.unwrap() as usize];
+    let mut h2 = u2.health;
+
+    let mut tick1 = 0;
+    let mut tick2 = 0;
+    while h1 >= 0.0 && h2 >= 0.0 {
+        if ammo1 == 0 {
+            h1 = 0.0;
+            break;
+        }
+        if ammo2 == 0 {
+            h2 = 0.0;
+            break;
+        }
+        let min = min(tick1, tick2);
+        tick1 -= min;
+        tick2 -= min;
+        if tick1 == 0 {
+            tick1 += w1.get_fire_rate_in_ticks();
+            h2 -= w1.projectile_damage;
+            ammo1 -= 1;
+        }
+        if tick2 == 0 {
+            tick2 += w2.get_fire_rate_in_ticks();
+            h1 -= w2.projectile_damage;
+            ammo2 -= 1;
+        }
+    }
+    return h1 >= 0.0 && h2 <= 0.0;
 }

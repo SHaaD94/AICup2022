@@ -1,3 +1,4 @@
+use crate::strategy::holder::get_constants;
 use super::*;
 
 /// Weapon properties
@@ -34,6 +35,9 @@ pub struct WeaponProperties {
 impl WeaponProperties {
     pub fn firing_distance(&self) -> f64 {
         self.projectile_speed * self.projectile_life_time
+    }
+    pub fn get_fire_rate_in_ticks(&self) -> i32 {
+        (1.0 / (self.rounds_per_second / get_constants().ticks_per_second)).ceil() as i32
     }
 }
 
