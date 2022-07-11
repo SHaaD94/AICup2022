@@ -2,6 +2,7 @@ pub mod util;
 pub mod holder;
 mod module;
 pub mod loot;
+pub mod potential_field;
 
 use std::collections::HashMap;
 use std::ops::Index;
