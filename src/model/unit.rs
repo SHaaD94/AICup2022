@@ -42,14 +42,15 @@ pub struct Unit {
 
 impl Unit {
     pub fn points_around_unit(&self) -> Vec<Vec2> {
-        let points_around = 10;
+        let points_around = 50;
         let angle_diff = 2.0 * PI / points_around as f64;
         let mut res = Vec::new();
         let mut cur_angle = self.direction.angle();
         let obstacles = get_obstacles(self.id);
         for _ in 0..points_around {
             let next_vec = rotate(self.position.clone(), cur_angle,
-                                  get_constants().max_unit_forward_speed / get_constants().ticks_per_second);
+                                  // 5.0 because it's pretty useful too not getting stuck in trees
+                                  get_constants().max_unit_forward_speed / get_constants().ticks_per_second * 5.0);
             let intersects_with_obstacles = obstacles.iter()
                 .find(|o| o.position.distance(&next_vec) < o.radius + get_constants().unit_radius)
                 .is_some();

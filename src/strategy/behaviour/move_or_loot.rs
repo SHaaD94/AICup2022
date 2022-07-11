@@ -24,18 +24,17 @@ impl Behaviour for MoveToCenterOrLoot {
         if let Some(loot) = &best_intersecting_loot {
             unsafe { remove_loot(loot.id.clone()); }
         }
+        let move_target = best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center);
+        let result_move = unit.points_around_unit().iter()
+            .min_by_key(|e| (-e.distance(&unit.position) + e.distance(&move_target).ceil() * 1000.0) as i32).unwrap().clone();
         if let Some(debug) = debug_interface.as_mut() {
-            if let Some(ref loot) = best_not_intersecting_loot {
-                debug.add_circle(loot.position.clone(), 0.3, BLUE.clone());
-            }
-            for p in unit.points_around_unit() {
-                debug.add_circle(p, 0.5, TRANSPARENT_BLUE.clone());
-            }
+            debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
+            debug.add_circle(move_target.clone(), -0.5, TRANSPARENT_BLUE.clone());
         }
-
         UnitOrder {
-            target_velocity: (best_not_intersecting_loot.as_ref().map(|l| l.position.clone()).unwrap_or(next_zone_center.clone()) - unit.position.clone()) * 1000.0,
-            target_direction: best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center) - unit.position.clone(),
+            target_velocity: (result_move.clone() - unit.position.clone()) * 1000.0,
+            target_direction: result_move.clone() - unit.position.clone(),
+            // target_direction: move_target.clone() - unit.position.clone(),
             action: best_intersecting_loot.map(|l| Pickup { loot: l.id }),
         }
     }
