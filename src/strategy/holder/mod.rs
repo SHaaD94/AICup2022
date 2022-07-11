@@ -60,7 +60,7 @@ fn update_units(game: &Game) {
         units_hashmap.insert(x.id, (unit_ttl, x.clone()));
     }
     for x in unsafe { &UNIT_TO_TICK } {
-        if !units_hashmap.contains_key(&x.1.id) {
+        if !units_hashmap.contains_key(&x.1.id) && !inside_vision(game, &x.1.position) {
             if x.0 - 1 > 0 {
                 units_hashmap.insert(x.1.id, (x.0 - 1, x.1.clone()));
             }
@@ -77,7 +77,7 @@ fn update_loot(game: &Game) {
         loot_hashmap.insert(x.id, (loot_ttl, x.clone()));
     }
     for x in unsafe { &LOOT_TO_TICK } {
-        if !loot_hashmap.contains_key(&x.1.id) {
+        if !loot_hashmap.contains_key(&x.1.id) && !inside_vision(game, &x.1.position) {
             if x.0 - 1 > 0 {
                 loot_hashmap.insert(x.1.id, (x.0 - 1, x.1.clone()));
             }
@@ -104,7 +104,8 @@ fn update_projectiles(game: &Game) {
                 .map(|e| e.position)
                 .find(|e| e.distance(&new_pos) < get_constants().unit_radius).is_some();
 
-            if life_time_after > 0.0 && !intersects_with_units && !intersects_with_obstacles {
+            if life_time_after > 0.0 && !intersects_with_units && !intersects_with_obstacles
+                && !inside_vision(game, &x.position) {
                 projectiles_map.insert(x.id, Projectile {
                     life_time: life_time_after,
                     id: x.id,
@@ -118,6 +119,14 @@ fn update_projectiles(game: &Game) {
         }
     }
     unsafe { PROJECTILES = projectiles_map.iter().map(|e| e.1.clone()).collect_vec() };
+}
+
+fn inside_vision(game: &Game, x: &Vec2) -> bool {
+    game.my_units().iter().find(|u| {
+        let (left_angle, right_angle) = u.view_segment_angles();
+        let angle = (x.clone() - u.position.clone()).angle();
+        (left_angle >= angle && right_angle <= angle) || (left_angle <= angle && right_angle >= angle)
+    }).is_some()
 }
 
 fn set_nearest_obstacles(game: &Game, constants: &Constants) {
