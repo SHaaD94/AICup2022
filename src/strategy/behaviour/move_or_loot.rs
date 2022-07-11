@@ -26,14 +26,20 @@ impl Behaviour for MoveToCenterOrLoot {
         }
         let move_target = best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center);
         let result_move = unit.points_around_unit().iter()
-            .min_by_key(|e| (-e.distance(&unit.position) + e.distance(&move_target).ceil() * 1000.0) as i32).unwrap().clone();
+            .min_by_key(|e| (e.distance(&unit.position) + e.distance(&move_target).ceil() * 1000.0) as i32).unwrap().clone();
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
             debug.add_circle(move_target.clone(), 0.5, TRANSPARENT_BLUE.clone());
         }
+        let rotation = if get_game().current_tick % 100 >= 85 {
+            Vec2 { x: -unit.direction.y, y: unit.direction.x }
+        } else {
+            result_move.clone() - unit.position.clone()
+        };
+
         UnitOrder {
             target_velocity: (result_move.clone() - unit.position.clone()) * 1000.0,
-            target_direction: result_move.clone() - unit.position.clone(),
+            target_direction: rotation,
             // target_direction: move_target.clone() - unit.position.clone(),
             action: best_intersecting_loot.map(|l| Pickup { loot: l.id }),
         }

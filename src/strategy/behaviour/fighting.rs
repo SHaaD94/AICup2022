@@ -39,8 +39,7 @@ impl Behaviour for Fighting {
             target.position.y,
             &get_obstacles(unit.id),
         );
-        let vector = target.position.clone() - unit.position.clone();
-        let goal = vector;
+        let goal = target.position.clone();
         let result_move = unit.points_around_unit().iter()
             .min_by_key(|e| (-e.distance(&unit.position) + e.distance(&goal).ceil() * 1000.0) as i32).unwrap().clone();
         if let Some(debug) = debug_interface.as_mut() {
@@ -49,7 +48,7 @@ impl Behaviour for Fighting {
         }
 
         UnitOrder {
-            target_velocity: result_move - unit.position.clone(),
+            target_velocity: (result_move - unit.position.clone()) * 1000.0,
             target_direction: target.position.clone() - unit.position.clone(),
             action: Some(Aim {
                 shoot: !intersects_with_obstacles
@@ -94,5 +93,5 @@ fn simulation(u1: &Unit, u2: &Unit) -> bool {
             ammo2 -= 1;
         }
     }
-    return h1 >= 0.0 && h2 <= 0.0;
+    return h2 <= 0.0;
 }

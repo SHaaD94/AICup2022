@@ -23,9 +23,10 @@ pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Or
     let constants = get_constants();
 
     let behaviours: Vec<Box<dyn Behaviour>> = vec![
-        Box::new(UseHeal {}),
         Box::new(Fighting {}),
-        Box::new(MoveToCenterOrLoot {})];
+        Box::new(UseHeal {}),
+        Box::new(MoveToCenterOrLoot {}),
+    ];
 
     let orders: HashMap<i32, UnitOrder> = game.my_units().into_iter().map(|u| {
         let mut order: UnitOrder = UnitOrder {
