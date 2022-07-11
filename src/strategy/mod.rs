@@ -16,7 +16,7 @@ use crate::strategy::holder::{get_constants, get_game};
 use crate::strategy::behaviour::behaviour::Behaviour;
 use crate::strategy::behaviour::fighting::Fighting;
 use crate::strategy::behaviour::move_or_loot::MoveToCenterOrLoot;
-use crate::strategy::behaviour::use_heal::RunAndHeal;
+use crate::strategy::behaviour::run_and_heal::RunAndHeal;
 
 pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Order {
     let game = get_game();

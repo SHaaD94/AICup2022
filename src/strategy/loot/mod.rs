@@ -56,5 +56,5 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
 
 fn is_inside_zone(loot: &Loot) -> bool {
     let game = get_game();
-    game.zone.current_center.distance(&loot.position) <= game.zone.current_radius
+    game.zone.current_center.distance(&loot.position) + 10.0 <= game.zone.current_radius
 }

@@ -25,6 +25,7 @@ impl Behaviour for Fighting {
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
         let game = get_game();
         let constants = get_constants();
+        let weapon = &constants.weapons[unit.weapon.unwrap_or(0) as usize];
 
         let target = get_units().iter().min_by_key(|e| e.position.distance(&unit.position) as i64).unwrap();
 
@@ -32,11 +33,12 @@ impl Behaviour for Fighting {
             debug.add_circle(target.position.clone(), 0.5, RED.clone());
         }
 
+        let fire_target = target.position.clone() + (target.velocity.clone() * 0.95 * unit.position.distance(&target.position) / weapon.projectile_speed);
         let intersects_with_obstacles = does_intersect(
             unit.position.x,
             unit.position.y,
-            target.position.x,
-            target.position.y,
+            fire_target.x,
+            fire_target.y,
             &get_obstacles(unit.id),
         );
         let goal = target.position.clone();
@@ -49,7 +51,7 @@ impl Behaviour for Fighting {
 
         UnitOrder {
             target_velocity: (result_move - unit.position.clone()) * 1000.0,
-            target_direction: target.position.clone() - unit.position.clone(),
+            target_direction: fire_target - unit.position.clone(),
             action: Some(Aim {
                 shoot: !intersects_with_obstacles
             }),
@@ -63,13 +65,16 @@ fn simulation(u1: &Unit, u2: &Unit) -> bool {
     let constants = get_constants();
     let mut ammo1 = u1.ammo[u1.weapon.unwrap() as usize];
     let w1 = &constants.weapons[u1.weapon.unwrap() as usize];
-    let mut h1 = u1.health;
+    let mut h1 = u1.health + u1.shield;
     let mut ammo2 = u2.ammo[u2.weapon.unwrap() as usize];
     let w2 = &constants.weapons[u2.weapon.unwrap() as usize];
-    let mut h2 = u2.health;
+    let mut h2 = u2.health + u2.shield;
 
     let mut tick1 = 0;
     let mut tick2 = 0;
+    // if w1.firing_distance() > u1.position.distance(&u2.position) {
+    //     h2 = 0.0
+    // }
     while h1 >= 0.0 && h2 >= 0.0 {
         if ammo1 == 0 {
             h1 = 0.0;
@@ -93,5 +98,5 @@ fn simulation(u1: &Unit, u2: &Unit) -> bool {
             ammo2 -= 1;
         }
     }
-    return h2 <= 0.0;
+    return h1 > 0.0 && h2 <= 0.0;
 }

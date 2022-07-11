@@ -36,7 +36,7 @@ impl Behaviour for RunAndHeal {
                         e.position.distance(&p) * 10.0
                     }
                 }).sum::<f64>();
-                let area_penalty = if get_game().zone.current_center.distance(&p) >= get_game().zone.current_radius {
+                let area_penalty = if get_game().zone.current_center.distance(&p) + 10.0 >= get_game().zone.current_radius {
                     5000.0
                 } else { 0.0 };
                 let res = enemy_score - p.distance(&unit.position) - area_penalty;
@@ -58,7 +58,7 @@ impl Behaviour for RunAndHeal {
             result_move.clone() - unit.position.clone()
         };
         UnitOrder {
-            target_velocity: result_move - unit.position.clone(),
+            target_velocity: (result_move - unit.position.clone()) * 1000.0,
             target_direction: rotation,
             action: Some(UseShieldPotion {}),
         }
