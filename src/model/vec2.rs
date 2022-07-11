@@ -67,7 +67,7 @@ impl Vec2 {
         let other_y = 0.0;
         let top = self.x * other_x + self.y * other_y;
         let res = top / self.len();
-        println!("({}), top :{}, {}, {}", self, top, res, res.acos());
+        // println!("({}), top :{}, {}, {}", self, top, res, res.acos());
         if self.y < 0.0 { -res.acos() } else { res.acos() }
     }
     pub fn distance(&self, other: &Vec2) -> f64 {
