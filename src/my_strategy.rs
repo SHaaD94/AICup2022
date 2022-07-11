@@ -26,7 +26,7 @@ impl MyStrategy {
         update_game(game);
 
         match debug_interface {
-            None => {}
+            None => get_order(None),
             Some(debug) => {
                 // Self::draw_sounds(debug);
                 Self::draw_vision(debug);
@@ -34,9 +34,9 @@ impl MyStrategy {
                 Self::draw_loot(debug);
                 // Self::draw_projectiles(debug)
                 // Self::draw_obstacles(debug)
+                get_order(Some(debug))
             }
         }
-        get_order()
     }
 
     fn draw_vision(debug: &mut DebugInterface) {

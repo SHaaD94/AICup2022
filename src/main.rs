@@ -1,5 +1,4 @@
 mod my_strategy;
-mod debug_interface;
 
 use debug_interface::DebugInterface;
 use my_strategy::MyStrategy;
