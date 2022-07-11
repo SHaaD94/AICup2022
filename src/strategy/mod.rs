@@ -18,7 +18,7 @@ use crate::strategy::behaviour::fighting::Fighting;
 use crate::strategy::behaviour::move_or_loot::MoveToCenterOrLoot;
 use crate::strategy::behaviour::use_heal::UseHeal;
 
-pub fn get_order(mut debug_interface: Option<&mut DebugInterface>) -> model::Order {
+pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Order {
     let game = get_game();
     let constants = get_constants();
 
@@ -38,7 +38,7 @@ pub fn get_order(mut debug_interface: Option<&mut DebugInterface>) -> model::Ord
         }
         for behaviour in &behaviours {
             if behaviour.should_use(u) {
-                order = behaviour.order(u, debug_interface.as_mut().map(|x| &mut **x));
+                order = behaviour.order(u, debug_interface);
                 break;
             }
         }

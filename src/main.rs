@@ -68,11 +68,11 @@ impl Runner {
                     let message = codegame::ClientMessage::OrderMessage {
                         order: strategy.as_mut().unwrap().get_order(
                             player_view,
-                            if debug_available {
+                            &mut (if debug_available {
                                 Some(&mut debug_interface)
                             } else {
                                 None
-                            },
+                            }),
                         ),
                     };
                     message.write_to(&mut self.writer)?;

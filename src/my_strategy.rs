@@ -21,7 +21,7 @@ impl MyStrategy {
     pub fn get_order(
         &mut self,
         game: Game,
-        mut debug_interface: Option<&mut DebugInterface>,
+        debug_interface: &mut Option<&mut DebugInterface>,
     ) -> model::Order {
         update_game(game);
 

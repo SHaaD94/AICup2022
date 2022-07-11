@@ -11,7 +11,7 @@ pub struct MoveToCenterOrLoot {}
 impl Behaviour for MoveToCenterOrLoot {
     fn should_use(&self, unit: &Unit) -> bool { true }
 
-    fn order(&self, unit: &Unit, mut debug_interface: Option<&mut DebugInterface>) -> UnitOrder {
+    fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
         let game = get_game();
         let constants = get_constants();
         let loot = get_loot();

@@ -10,6 +10,6 @@ use crate::strategy::util::does_intersect;
 
 pub trait Behaviour: Sync {
     fn should_use(&self, unit: &Unit) -> bool;
-    fn order(&self, unit: &Unit, debug_interface: Option<&mut DebugInterface>) -> UnitOrder;
+    fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder;
 }
 
