@@ -77,13 +77,8 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
         let unit_pos = projectile.position.clone() - (projectile.velocity.clone() * fly_time);
         let ticks = (fly_time * &get_constants().ticks_per_second).ceil() as i32;
 
-        // let unit_is_absent_or_new_data_is_fresher = units_hashmap.get(&projectile.shooter_id)
-            // .map(|e| e.0 < unit_ttl - ticks).unwrap_or(true);
-
-        println!("{}",ticks);
-
         if projectile.shooter_player_id != game.my_id
-            && (!units_hashmap.contains_key(&projectile.shooter_id) || units_hashmap.get(&projectile.shooter_id).unwrap().0 < unit_ttl - ticks)
+            && !units_hashmap.contains_key(&projectile.shooter_id)
             && !inside_vision(game, &unit_pos) {
 
             // if let Some(d) = debug_interface.as_mut() {

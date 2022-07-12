@@ -11,6 +11,7 @@ pub struct Fighting {}
 
 impl Behaviour for Fighting {
     fn should_use(&self, unit: &Unit) -> bool {
+        if unit.action.is_some() { return false; };
         let have_weapon_and_ammo = match unit.weapon {
             None => { false }
             Some(weapon) => { unit.ammo[weapon as usize] != 0 }
