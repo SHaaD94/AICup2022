@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use itertools::Itertools;
+use crate::debug_interface::DebugInterface;
+use crate::debugging::{BLUE, RED};
 use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit, Vec2};
 
 static mut GAME: Game = Game::const_default();
@@ -42,18 +44,18 @@ pub fn get_obstacles(unit_id: i32) -> Vec<Obstacle> {
         .map(|(_, obstacles)| obstacles.clone()).unwrap_or(Vec::new())
 }
 
-pub fn update_game(game: Game) {
+pub fn update_game(game: Game, debug_interface: &mut Option<&mut DebugInterface>) {
     let constants = get_constants();
 
     set_nearest_obstacles(&game, constants);
-    update_units(&game);
+    update_units(&game, debug_interface);
     update_loot(&game);
     update_projectiles(&game);
 
     unsafe { GAME = game }
 }
 
-fn update_units(game: &Game) {
+fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) {
     let unit_ttl = 50;
     let mut units_hashmap = HashMap::new();
     for x in game.enemy_units() {
@@ -66,6 +68,42 @@ fn update_units(game: &Game) {
             }
         }
     }
+    //deduce shooter position by projectiles
+    for projectile in &game.projectiles {
+        let w_id = projectile.weapon_type_index as usize;
+        let w = &get_constants().weapons[w_id];
+        let fly_time = w.projectile_life_time - projectile.life_time;
+
+        let unit_pos = projectile.position.clone() - (projectile.velocity.clone() * fly_time);
+        let ticks = (fly_time * &get_constants().ticks_per_second).ceil() as i32;
+
+        // let unit_is_absent_or_new_data_is_fresher = units_hashmap.get(&projectile.shooter_id)
+            // .map(|e| e.0 < unit_ttl - ticks).unwrap_or(true);
+
+        println!("{}",ticks);
+
+        if projectile.shooter_player_id != game.my_id
+            && (!units_hashmap.contains_key(&projectile.shooter_id) || units_hashmap.get(&projectile.shooter_id).unwrap().0 < unit_ttl - ticks)
+            && !inside_vision(game, &unit_pos) {
+
+            // if let Some(d) = debug_interface.as_mut() {
+            //     d.add_circle(unit_pos.clone(), 15.0, RED.clone());
+            //     d.add_circle(projectile.position.clone(), 5.0, BLUE.clone());
+            // }
+
+            let imaginary_unit = Unit {
+                id: projectile.shooter_id,
+                position: unit_pos,
+                direction: projectile.velocity.clone(),
+                weapon: Some(w_id as i32),
+                health: get_constants().unit_health.clone(),
+                ammo: Vec::from([10, 10, 10, 10]),
+                ..Unit::default()
+            };
+            units_hashmap.insert(projectile.shooter_id, (unit_ttl - ticks, imaginary_unit));
+        }
+    }
+
     unsafe { UNIT_TO_TICK = units_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
     unsafe { UNITS = units_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
 }
@@ -122,11 +160,13 @@ fn update_projectiles(game: &Game) {
 }
 
 fn inside_vision(game: &Game, x: &Vec2) -> bool {
-    game.my_units().iter().find(|u| {
-        let (left_angle, right_angle) = u.view_segment_angles();
-        let angle = (x.clone() - u.position.clone()).angle();
-        (left_angle >= angle && right_angle <= angle) || (left_angle <= angle && right_angle >= angle)
-    }).is_some()
+    game.my_units().iter()
+        .filter(|e| e.position.distance(x) <= get_constants().view_distance)
+        .find(|u| {
+            let (left_angle, right_angle) = u.view_segment_angles();
+            let angle = (x.clone() - u.position.clone()).angle();
+            (left_angle >= angle && right_angle <= angle) || (left_angle <= angle && right_angle >= angle)
+        }).is_some()
 }
 
 fn set_nearest_obstacles(game: &Game, constants: &Constants) {

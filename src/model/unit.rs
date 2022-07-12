@@ -41,6 +41,26 @@ pub struct Unit {
 }
 
 impl Unit {
+    pub fn default() -> Unit {
+        Unit{
+            id: 0,
+            player_id: 0,
+            health: 0.0,
+            shield: 0.0,
+            extra_lives: 0,
+            position: Default::default(),
+            remaining_spawn_time: None,
+            velocity: Default::default(),
+            direction: Default::default(),
+            aim: 0.0,
+            action: None,
+            health_regeneration_start_tick: 0,
+            weapon: None,
+            next_shot_tick: 0,
+            ammo: vec![],
+            shield_potions: 0
+        }
+    }
     pub fn points_around_unit(&self) -> Vec<Vec2> {
         let points_around = 50;
         let angle_diff = 2.0 * PI / points_around as f64;

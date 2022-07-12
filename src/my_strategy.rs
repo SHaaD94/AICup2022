@@ -23,12 +23,12 @@ impl MyStrategy {
         game: Game,
         debug_interface: &mut Option<&mut DebugInterface>,
     ) -> model::Order {
-        update_game(game);
+        update_game(game, debug_interface);
 
         if let Some(debug) = debug_interface.as_mut() {
-            Self::draw_sounds(debug);
+            // Self::draw_sounds(debug);
             // Self::draw_vision(debug);
-            // Self::draw_units(debug);
+            Self::draw_units(debug);
             // Self::draw_loot(debug);
             Self::draw_projectiles(debug)
             // Self::draw_obstacles(debug)
