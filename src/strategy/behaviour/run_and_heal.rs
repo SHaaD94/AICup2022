@@ -21,26 +21,31 @@ impl Behaviour for RunAndHeal {
         for x in 0..21 {
             for y in 0..21 {
                 let p = Vec2 { x: unit.position.x + x as f64 - 10.0, y: unit.position.y + y as f64 - 10.0 };
+                if unit.position.distance(&p) > 10.0 { continue; }
                 if obstacles.iter().find(|o| o.position.distance(&p) < o.radius + get_constants().unit_radius).is_some() {
                     continue;
                 }
                 let enemy_score = get_units().iter().map(|e| {
+                    let firing_distance = e.weapon.map(|w| get_constants().weapons[w as usize].firing_distance())
+                        .unwrap_or(0.0);
+                    let distance = e.position.distance(&p);
                     if does_intersect(
                         p.x,
                         p.y,
                         e.position.x,
                         e.position.y,
-                        &obstacles) {
-                        100.0
+                        &obstacles) || distance > firing_distance {
+                        firing_distance
                     } else {
-                        e.position.distance(&p) * 10.0
+                        distance
                     }
                 }).sum::<f64>();
                 let area_penalty = if get_game().zone.current_center.distance(&p) + 10.0 >= get_game().zone.current_radius {
                     5000.0
                 } else { 0.0 };
-                let res = enemy_score - p.distance(&unit.position) - area_penalty;
-                if enemy_score + p.distance(&unit.position) - area_penalty > top_score {
+                let distance_from_previous_score = if p.distance(&unit.position) > 3.0 { 3.0 } else {p.distance(&unit.position)};
+                let res = enemy_score + distance_from_previous_score - area_penalty;
+                if res > top_score {
                     top_point = p;
                     top_score = res;
                 }
