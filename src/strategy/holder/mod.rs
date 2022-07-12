@@ -134,8 +134,7 @@ fn update_projectiles(game: &Game) {
                 .find(|e| e.position.distance(&new_pos) < get_constants().unit_radius).is_some();
             let intersects_with_obstacles = game.my_units().iter().map(|u| get_obstacles(u.id)).flatten()
                 .filter(|e| !e.can_shoot_through)
-                .map(|e| e.position)
-                .find(|e| e.distance(&new_pos) < get_constants().unit_radius).is_some();
+                .find(|o| o.position.distance(&new_pos) < o.radius).is_some();
 
             if life_time_after > 0.0 && !intersects_with_units && !intersects_with_obstacles
                 && !inside_vision(game, &x.position) {

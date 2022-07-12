@@ -71,11 +71,9 @@ fn simulation(u1: &Unit, u2: &Unit) -> bool {
     let w2 = &constants.weapons[u2.weapon.unwrap() as usize];
     let mut h2 = u2.health + u2.shield;
 
-    let mut tick1 = 0;
-    let mut tick2 = 0;
-    // if w1.firing_distance() > u1.position.distance(&u2.position) {
-    //     h2 = 0.0
-    // }
+    let mut tick1 = ((1.0 - u1.aim) * (w1.aim_time) * constants.ticks_per_second).ceil() as i32;
+    let mut tick2 = ((1.0 - u2.aim) * (w2.aim_time) * constants.ticks_per_second).ceil() as i32;
+
     while h1 >= 0.0 && h2 >= 0.0 {
         if ammo1 == 0 {
             h1 = 0.0;
