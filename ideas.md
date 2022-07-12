@@ -13,3 +13,4 @@
 9. Try dodging the bullet
 10. Must have a priority for picking up items
 11. Must remain inside of AREA
+12. Calculate enemy position from bullet trace

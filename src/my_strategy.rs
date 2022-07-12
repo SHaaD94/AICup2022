@@ -4,7 +4,7 @@ use std::sync::atomic::AtomicPtr;
 use itertools::Itertools;
 use crate::debug_interface::DebugInterface;
 use ai_cup_22::*;
-use ai_cup_22::debugging::{BLUE, Color, GREEN, RED, TEAL, TRANSPARENT_GREEN};
+use ai_cup_22::debugging::{BLUE, Color, GREEN, YELLOW, RED, TEAL, TRANSPARENT_GREEN};
 use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
 use ai_cup_22::model::ActionOrder::Aim;
 use ai_cup_22::strategy::get_order;
@@ -26,11 +26,11 @@ impl MyStrategy {
         update_game(game);
 
         if let Some(debug) = debug_interface.as_mut() {
-            // Self::draw_sounds(debug);
+            Self::draw_sounds(debug);
             // Self::draw_vision(debug);
-            Self::draw_units(debug);
-            Self::draw_loot(debug);
-            // Self::draw_projectiles(debug)
+            // Self::draw_units(debug);
+            // Self::draw_loot(debug);
+            Self::draw_projectiles(debug)
             // Self::draw_obstacles(debug)
         }
         get_order(debug_interface)
@@ -67,7 +67,7 @@ impl MyStrategy {
 
     fn draw_sounds(debug: &mut DebugInterface) {
         for x in &get_game().sounds {
-            debug.add_circle(x.position.clone(), 1.5, RED.clone())
+            debug.add_circle(x.position.clone(), 0.5 * ((x.type_index + 1) as f64), YELLOW.clone())
         }
     }
 
