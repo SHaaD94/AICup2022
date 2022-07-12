@@ -83,6 +83,52 @@ pub struct Constants {
     pub obstacles: Vec<model::Obstacle>,
 }
 
+impl Constants {
+    pub const fn const_default() -> Self {
+        Constants {
+            ticks_per_second: 0.0,
+            team_size: 0,
+            initial_zone_radius: 0.0,
+            zone_speed: 0.0,
+            zone_damage_per_second: 0.0,
+            spawn_time: 0.0,
+            spawn_collision_damage_per_second: 0.0,
+            looting_time: 0.0,
+            bot_players: 0,
+            unit_radius: 0.0,
+            unit_health: 0.0,
+            health_regeneration_per_second: 0.0,
+            health_regeneration_delay: 0.0,
+            max_shield: 0.0,
+            spawn_shield: 0.0,
+            extra_lives: 0,
+            last_respawn_zone_radius: 0.0,
+            field_of_view: 0.0,
+            view_distance: 0.0,
+            view_blocking: false,
+            rotation_speed: 0.0,
+            spawn_movement_speed: 0.0,
+            max_unit_forward_speed: 0.0,
+            max_unit_backward_speed: 0.0,
+            unit_acceleration: 0.0,
+            friendly_fire: false,
+            kill_score: 0.0,
+            damage_score_multiplier: 0.0,
+            score_per_place: 0.0,
+            weapons: vec![],
+            starting_weapon: None,
+            starting_weapon_ammo: 0,
+            max_shield_potions_in_inventory: 0,
+            shield_per_potion: 0.0,
+            shield_potion_use_time: 0.0,
+            sounds: vec![],
+            steps_sound_type_index: None,
+            steps_sound_travel_distance: 0.0,
+            obstacles: vec![],
+        }
+    }
+}
+
 impl trans::Trans for Constants {
     fn write_to(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         self.ticks_per_second.write_to(writer)?;

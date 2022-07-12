@@ -1,5 +1,4 @@
 mod my_strategy;
-mod debug_interface;
 
 use debug_interface::DebugInterface;
 use my_strategy::MyStrategy;
@@ -68,12 +67,12 @@ impl Runner {
                     let mut debug_interface = self.debug_interface();
                     let message = codegame::ClientMessage::OrderMessage {
                         order: strategy.as_mut().unwrap().get_order(
-                            &player_view,
-                            if debug_available {
+                            player_view,
+                            &mut (if debug_available {
                                 Some(&mut debug_interface)
                             } else {
                                 None
-                            },
+                            }),
                         ),
                     };
                     message.write_to(&mut self.writer)?;

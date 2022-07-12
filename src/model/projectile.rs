@@ -1,3 +1,4 @@
+use crate::strategy::holder::get_constants;
 use super::*;
 
 /// Weapon projectile
@@ -17,6 +18,16 @@ pub struct Projectile {
     pub velocity: model::Vec2,
     /// Left time of projectile's life
     pub life_time: f64,
+}
+
+impl Projectile {
+    pub fn life_time_in_ticks(&self) -> f64 {
+        self.life_time * get_constants().ticks_per_second
+    }
+    pub fn position_after_ticks(&self, ticks: i32) -> Vec2 {
+        if self.life_time_in_ticks() - ticks as f64 <= 0 as f64 { return Vec2 { x: -10000.0, y: -10000.0 }; }
+        self.position.clone() + (self.velocity.clone() / get_constants().ticks_per_second * (ticks as f64))
+    }
 }
 
 impl trans::Trans for Projectile {

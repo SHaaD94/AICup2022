@@ -1,7 +1,7 @@
 use super::*;
 
 /// An obstacle on the map
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Obstacle {
     /// Unique id
     pub id: i32,

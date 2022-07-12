@@ -1,3 +1,5 @@
+use itertools::Itertools;
+use crate::strategy::holder::get_constants;
 use super::*;
 
 /// Current game's state
@@ -19,6 +21,36 @@ pub struct Game {
     pub zone: model::Zone,
     /// List of sounds heard by your team during last tick
     pub sounds: Vec<model::Sound>,
+}
+
+impl Game {
+    pub const fn const_default() -> Self {
+        Game {
+            my_id: 0,
+            players: vec![],
+            current_tick: 0,
+            units: vec![],
+            loot: vec![],
+            projectiles: vec![],
+            zone: Zone {
+                current_center: Vec2 { x: 0.0, y: 0.0 },
+                current_radius: 0.0,
+                next_center: Vec2 { x: 1.0, y: 0.0 },
+                next_radius: 0.0,
+            },
+            sounds: vec![],
+        }
+    }
+
+    pub fn my_units(&self) -> Vec<&Unit> {
+        self.units.iter().filter(|e| e.player_id == self.my_id).collect_vec()
+    }
+    pub fn enemy_units(&self) -> Vec<&Unit> {
+        self.units.iter().filter(|e| e.player_id != self.my_id).collect_vec()
+    }
+    pub fn intersecting_loot(&self, unit: &Unit) -> Vec<&Loot> {
+        self.loot.iter().filter(|l| unit.position.distance(&l.position.clone()) < get_constants().unit_radius).collect_vec()
+    }
 }
 
 impl trans::Trans for Game {

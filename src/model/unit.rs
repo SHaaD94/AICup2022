@@ -1,3 +1,6 @@
+use std::f64::consts::PI;
+use crate::strategy::holder::{get_constants, get_obstacles};
+use crate::strategy::util::rotate;
 use super::*;
 
 /// A unit
@@ -35,6 +38,55 @@ pub struct Unit {
     pub ammo: Vec<i32>,
     /// Number of shield potions in inventory
     pub shield_potions: i32,
+}
+
+impl Unit {
+    pub fn points_around_unit(&self) -> Vec<Vec2> {
+        let points_around = 50;
+        let angle_diff = 2.0 * PI / points_around as f64;
+        let mut res = Vec::new();
+        let mut cur_angle = self.direction.angle();
+        let obstacles = get_obstacles(self.id);
+        for _ in 0..points_around {
+            let next_vec = rotate(self.position.clone(), cur_angle,
+                                  // 5.0 because it's pretty useful too not getting stuck in trees
+                                  get_constants().max_unit_forward_speed / get_constants().ticks_per_second * 5.0);
+            let intersects_with_obstacles = obstacles.iter()
+                .find(|o| o.position.distance(&next_vec) < o.radius + get_constants().unit_radius)
+                .is_some();
+            if !intersects_with_obstacles {
+                res.push(next_vec);
+            }
+            cur_angle += angle_diff;
+        }
+
+        res
+    }
+
+    pub fn view_segment_angles(&self) -> (f64, f64) {
+        let default_view = get_constants().field_of_view;
+        let view_angle = self.weapon.map(|e|
+            default_view - (default_view - get_constants().weapons[e as usize].aim_field_of_view) * self.aim)
+            .unwrap_or(default_view) * PI / 180.0;
+
+        let left_angle = self.direction.angle() - view_angle / 2.0;
+        let right_angle = self.direction.angle() + view_angle / 2.0;
+        (left_angle, right_angle)
+    }
+
+    pub fn view_segment(&self) -> (Vec2, Vec2) {
+        let (left_angle, right_angle) = self.view_segment_angles();
+
+        let first = rotate(
+            self.position.clone(),
+            left_angle,
+            get_constants().view_distance);
+        let second = rotate(
+            self.position.clone(),
+            right_angle,
+            get_constants().view_distance);
+        (first, second)
+    }
 }
 
 impl trans::Trans for Unit {
