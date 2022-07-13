@@ -30,7 +30,7 @@ impl MyStrategy {
             // Self::draw_vision(debug);
             Self::draw_units(debug);
             // Self::draw_loot(debug);
-            Self::draw_projectiles(debug)
+            // Self::draw_projectiles(debug)
             // Self::draw_obstacles(debug)
         }
         get_order(debug_interface)

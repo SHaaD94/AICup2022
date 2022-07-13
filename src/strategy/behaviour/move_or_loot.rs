@@ -1,10 +1,11 @@
 use crate::debug_interface::DebugInterface;
-use crate::debugging::{BLUE, GREEN, TRANSPARENT_BLUE, TRANSPARENT_GREEN};
+use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE, TRANSPARENT_GREEN};
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Pickup;
 use crate::strategy::behaviour::behaviour::Behaviour;
 use crate::strategy::holder::{get_constants, get_game, get_loot, remove_loot};
 use crate::strategy::loot::best_loot;
+use crate::strategy::util::{bullet_trace_score, get_projectile_traces};
 
 pub struct MoveToCenterOrLoot {}
 
@@ -12,6 +13,16 @@ impl Behaviour for MoveToCenterOrLoot {
     fn should_use(&self, unit: &Unit) -> bool { true }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
+        if let Some(debug) = debug_interface.as_mut() {
+            debug.add_placed_text(
+                unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
+                "Move".to_owned(),
+                Vec2 { x: 1.0, y: 1.0 },
+                1.0,
+                RED.clone(),
+            )
+        }
+
         let game = get_game();
         let constants = get_constants();
         let loot = get_loot();
@@ -21,15 +32,25 @@ impl Behaviour for MoveToCenterOrLoot {
             y: game.zone.next_center.y,
         };
         let best_intersecting_loot = best_loot(unit, loot, true);
+
         if let Some(loot) = &best_intersecting_loot {
             unsafe { remove_loot(loot.id.clone()); }
         }
+        let traces = get_projectile_traces();
+
         let move_target = best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center);
         let result_move = unit.points_around_unit().iter()
-            .min_by_key(|e| (e.distance(&unit.position) + e.distance(&move_target).ceil() * 1000.0) as i32).unwrap().clone();
+            .min_by_key(|e| (
+                - e.distance(&unit.position)
+                    + bullet_trace_score(&traces, &e)
+                    + e.distance(&move_target)) as i32).unwrap().clone();
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
             debug.add_circle(move_target.clone(), 0.5, TRANSPARENT_BLUE.clone());
+
+            for x in get_projectile_traces() {
+                debug.add_circle(x.position, 0.1, BLUE.clone());
+            }
         }
         let rotation = if get_game().current_tick % 100 >= 85 {
             Vec2 { x: -unit.direction.y, y: unit.direction.x }

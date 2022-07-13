@@ -1,11 +1,11 @@
 use std::cmp::{max, min};
 use crate::debug_interface::DebugInterface;
-use crate::debugging::{RED, TRANSPARENT_BLUE};
-use crate::model::{Unit, UnitOrder};
+use crate::debugging::{BLUE, RED, TRANSPARENT_BLUE};
+use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Aim;
 use crate::strategy::behaviour::behaviour::Behaviour;
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
-use crate::strategy::util::does_intersect;
+use crate::strategy::util::{bullet_trace_score, does_intersect, get_projectile_traces};
 
 pub struct Fighting {}
 
@@ -24,17 +24,27 @@ impl Behaviour for Fighting {
     }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
+        if let Some(debug) = debug_interface.as_mut() {
+            debug.add_placed_text(
+                unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
+                "Fighting".to_owned(),
+                Vec2 { x: 1.0, y: 1.0 },
+                1.0,
+                RED.clone(),
+            )
+        }
+
         let game = get_game();
         let constants = get_constants();
         let weapon = &constants.weapons[unit.weapon.unwrap_or(0) as usize];
-
+        let traces = get_projectile_traces();
         let target = get_units().iter().min_by_key(|e| e.position.distance(&unit.position) as i64).unwrap();
 
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(target.position.clone(), 0.5, RED.clone());
         }
 
-        let fire_target = target.position.clone() + (target.velocity.clone() * 0.95 * unit.position.distance(&target.position) / weapon.projectile_speed);
+        let fire_target = target.position.clone() + (target.velocity.clone() * unit.position.distance(&target.position) / weapon.projectile_speed);
         let intersects_with_obstacles = does_intersect(
             unit.position.x,
             unit.position.y,
@@ -44,10 +54,16 @@ impl Behaviour for Fighting {
         );
         let goal = target.position.clone();
         let result_move = unit.points_around_unit().iter()
-            .min_by_key(|e| (-e.distance(&unit.position) + e.distance(&goal).ceil() * 1000.0) as i32).unwrap().clone();
+            .min_by_key(|e| (
+                bullet_trace_score(&traces, e)
+                    - e.distance(&unit.position)
+                    + e.distance(&goal)) as i32).unwrap().clone();
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
             debug.add_circle(goal.clone(), 0.5, TRANSPARENT_BLUE.clone());
+            for x in get_projectile_traces() {
+                debug.add_circle(x.position, 0.1, BLUE.clone());
+            }
         }
 
         UnitOrder {

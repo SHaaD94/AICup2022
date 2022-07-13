@@ -129,7 +129,10 @@ fn update_projectiles(game: &Game) {
     for x in unsafe { &PROJECTILES } {
         if !projectiles_map.contains_key(&x.id) {
             let life_time_after = (x.life_time_in_ticks() - 1.0) / ticks_per_second;
-            let new_pos = x.position_after_ticks(1);
+            let new_pos = match x.position_after_ticks(1) {
+                None => continue,
+                Some(pos) => pos
+            };
             let intersects_with_units = get_units().iter()
                 .find(|e| e.position.distance(&new_pos) < get_constants().unit_radius).is_some();
             let intersects_with_obstacles = game.my_units().iter().map(|u| get_obstacles(u.id)).flatten()

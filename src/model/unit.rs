@@ -42,7 +42,7 @@ pub struct Unit {
 
 impl Unit {
     pub fn default() -> Unit {
-        Unit{
+        Unit {
             id: 0,
             player_id: 0,
             health: 0.0,
@@ -58,7 +58,7 @@ impl Unit {
             weapon: None,
             next_shot_tick: 0,
             ammo: vec![],
-            shield_potions: 0
+            shield_potions: 0,
         }
     }
     pub fn points_around_unit(&self) -> Vec<Vec2> {
