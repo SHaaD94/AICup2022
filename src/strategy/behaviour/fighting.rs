@@ -1,4 +1,4 @@
-use std::cmp::min;
+use std::cmp::{max, min};
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{RED, TRANSPARENT_BLUE};
 use crate::model::{Unit, UnitOrder};
@@ -71,10 +71,16 @@ fn simulation(u1: &Unit, u2: &Unit) -> bool {
     let w2 = &constants.weapons[u2.weapon.unwrap() as usize];
     let mut h2 = u2.health + u2.shield;
 
-    let mut tick1 = u1.next_shot_tick - get_game().current_tick;
-    let mut tick2 = u2.next_shot_tick - get_game().current_tick;
+    let mut tick1 = -(max(get_game().current_tick, u1.next_shot_tick) - get_game().current_tick);
+    let mut tick2 = -(max(get_game().current_tick, u2.next_shot_tick) - get_game().current_tick);
+    tick1 += ((u1.aim - 1.0) * (w1.aim_time) * constants.ticks_per_second).ceil() as i32;
+    tick2 += ((u2.aim - 1.0) * (w2.aim_time) * constants.ticks_per_second).ceil() as i32;
 
+
+    // println!("START!");
     while h1 >= 0.0 && h2 >= 0.0 {
+        // println!("h1 {}, h2 {}, tick1 {}, tick2 {}, rate1 {}, rate2 {}, ammo1 {}, ammo2 {}",
+        //          h1, h2, tick1, tick2, w1.get_fire_rate_in_ticks(), w2.get_fire_rate_in_ticks(), ammo1, ammo2);
         if ammo1 == 0 {
             h1 = 0.0;
             break;
@@ -83,19 +89,20 @@ fn simulation(u1: &Unit, u2: &Unit) -> bool {
             h2 = 0.0;
             break;
         }
-        let min = min(tick1, tick2);
-        tick1 -= min;
-        tick2 -= min;
-        if tick1 == 0 {
-            tick1 += w1.get_fire_rate_in_ticks();
+        let min = min(w1.get_fire_rate_in_ticks(), w2.get_fire_rate_in_ticks());
+        tick1 += min;
+        tick2 += min;
+        if tick1 >= w1.get_fire_rate_in_ticks() {
+            tick1 -= w1.get_fire_rate_in_ticks();
             h2 -= w1.projectile_damage;
             ammo1 -= 1;
         }
-        if tick2 == 0 {
-            tick2 += w2.get_fire_rate_in_ticks();
+        if tick2 >= w2.get_fire_rate_in_ticks() {
+            tick2 -= w2.get_fire_rate_in_ticks();
             h1 -= w2.projectile_damage;
             ammo2 -= 1;
         }
     }
+    // println!("END!");
     return h1 > 0.0 && h2 <= 0.0;
 }
