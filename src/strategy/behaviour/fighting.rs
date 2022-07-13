@@ -60,7 +60,7 @@ impl Behaviour for Fighting {
     }
 }
 
-fn simulation(u1: &Unit, u2: &Unit) -> bool {
+pub fn simulation(u1: &Unit, u2: &Unit) -> bool {
     if u1.weapon.is_none() { return false; }
     if u2.weapon.is_none() { return true; }
     let constants = get_constants();

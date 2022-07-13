@@ -4,6 +4,7 @@ use crate::debugging::RED;
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::UseShieldPotion;
 use crate::strategy::behaviour::behaviour::Behaviour;
+use crate::strategy::behaviour::fighting::simulation;
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
 use crate::strategy::util::{does_intersect, rotate};
 
@@ -11,6 +12,10 @@ pub struct RunAndHeal {}
 
 impl Behaviour for RunAndHeal {
     fn should_use(&self, unit: &Unit) -> bool {
+        if get_units().iter()
+            //TODO check firing distance
+            .find(|e| !simulation(unit, e)).is_some() { return true; };
+
         unit.health < get_constants().unit_health * 0.5 || unit.shield < get_constants().max_shield && unit.shield_potions > 0
     }
 
@@ -43,7 +48,7 @@ impl Behaviour for RunAndHeal {
                 let area_penalty = if get_game().zone.current_center.distance(&p) + 10.0 >= get_game().zone.current_radius {
                     5000.0
                 } else { 0.0 };
-                let distance_from_previous_score = if p.distance(&unit.position) > 3.0 { 3.0 } else {p.distance(&unit.position)};
+                let distance_from_previous_score = if p.distance(&unit.position) > 3.0 { 3.0 } else { p.distance(&unit.position) };
                 let res = enemy_score + distance_from_previous_score - area_penalty;
                 if res > top_score {
                     top_point = p;

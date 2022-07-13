@@ -92,7 +92,7 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
                 direction: projectile.velocity.clone(),
                 weapon: Some(w_id as i32),
                 health: get_constants().unit_health.clone(),
-                ammo: Vec::from([10, 10, 10, 10]),
+                ammo: Vec::from([100, 100, 100, 100]),
                 ..Unit::default()
             };
             units_hashmap.insert(projectile.shooter_id, (unit_ttl - ticks, imaginary_unit));
