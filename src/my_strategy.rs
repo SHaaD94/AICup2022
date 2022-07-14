@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::sync::atomic::AtomicPtr;
+use std::time::{SystemTime, UNIX_EPOCH};
 use itertools::Itertools;
 use crate::debug_interface::DebugInterface;
 use ai_cup_22::*;
@@ -24,6 +25,9 @@ impl MyStrategy {
         game: Game,
         debug_interface: &mut Option<&mut DebugInterface>,
     ) -> model::Order {
+        // let start = SystemTime::now()
+        //     .duration_since(UNIX_EPOCH)
+        //     .expect("Time went backwards");
         update_game(game, debug_interface);
 
         if let Some(debug) = debug_interface.as_mut() {
@@ -36,6 +40,9 @@ impl MyStrategy {
             // Self::draw_projectiles(debug)
             // Self::draw_obstacles(debug)
         }
+        // println!("{}", SystemTime::now()
+        //     .duration_since(UNIX_EPOCH)
+        //     .expect("Time went backwards").as_nanos() - start.as_nanos());
         get_order(debug_interface)
     }
 

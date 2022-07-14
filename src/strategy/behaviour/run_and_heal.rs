@@ -4,7 +4,6 @@ use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE};
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::UseShieldPotion;
 use crate::strategy::behaviour::behaviour::{Behaviour, write_behaviour};
-use crate::strategy::behaviour::fighting::simulation;
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
 use crate::strategy::util::{bullet_trace_score, does_intersect, get_projectile_traces, rotate};
 

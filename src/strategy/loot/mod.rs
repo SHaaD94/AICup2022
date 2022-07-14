@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use libc::clone;
 use crate::model::{Item, Loot, Unit};
-use crate::strategy::holder::{get_constants, get_game};
+use crate::strategy::holder::{get_constants, get_game, get_units};
 
 pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<Loot> {
     let constants = get_constants();
@@ -9,6 +9,8 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
     let ammo = unit.ammo.clone();
     let score2loot = loots.iter()
         .filter(|l| is_inside_zone(l))
+        .filter(|l|
+            get_units().iter().find(|e| e.position.distance(&l.position) + get_constants().unit_radius < e.firing_distance()).is_none())
         .filter(|l| if !intersecting {
             unit.position.distance(&l.position) >= constants.unit_radius
         } else {

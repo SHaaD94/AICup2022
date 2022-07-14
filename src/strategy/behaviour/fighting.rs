@@ -1,5 +1,5 @@
 use std::cmp::{max, min};
-use itertools::Itertools;
+use itertools::{all, Itertools};
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED, TRANSPARENT_BLUE};
 use crate::model::{Obstacle, Unit, UnitOrder, Vec2};
@@ -19,7 +19,7 @@ impl Behaviour for Fighting {
         };
         if !have_weapon_and_ammo { return false; };
 
-        get_units().iter().filter(|e| simulation(unit, e)).find(|e|
+        get_units().iter().filter(|e| simulation(unit, e, get_units().len() == 1)).find(|e|
             e.position.distance(&unit.position) - get_constants().unit_radius < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
         ).is_some()
     }
@@ -31,7 +31,9 @@ impl Behaviour for Fighting {
         let constants = get_constants();
         let weapon = &constants.weapons[unit.weapon.unwrap_or(0) as usize];
         let traces = get_projectile_traces();
-        let target = get_units().iter().min_by_key(|e| e.position.distance(&unit.position) as i64).unwrap();
+        let target = get_units().iter()
+            .filter(|e| simulation(unit, e, get_units().len() == 1))
+            .min_by_key(|e| e.position.distance(&unit.position) as i64).unwrap();
 
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(target.position.clone(), 0.5, RED.clone());
@@ -84,18 +86,19 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
         let has_obstacles = does_intersect_vec(&unit.position, &p, obstacles);
         let distance_to_target = p.distance(&target.position);
         let distance_score = (distance_to_target - unit.firing_distance() * 0.5).abs();
+        let distance_to_zone_center = p.distance(&get_game().zone.current_center);
+        let zone_penalty_score = if distance_to_zone_center / &get_game().zone.current_radius > 0.95 {
+            distance_to_zone_center
+        } else {
+            0.0
+        };
 
-        println!("{} {}",distance_score,             units_not_in_firing_distance.len() as f64 * 2.0
-            - units_in_firing_distance.len() as f64 * 2.0
-            + if has_obstacles { -5.0 } else { 5.0 }
-            + if p.is_inside_zone() { 0.0 } else { 50000.0 }
-        );
         // more is better
         let score =
-            // units_not_in_firing_distance.len() as f64 * 2.0
-                // - units_in_firing_distance.len() as f64 * 2.0
-                 if has_obstacles { -5.0 } else { 5.0 }
-                + if p.is_inside_zone() { 0.0 } else { 50000.0 }
+            units_not_in_firing_distance.len() as f64 * 2.0
+                - units_in_firing_distance.len() as f64 * 2.0
+                + if has_obstacles { -5.0 } else { 5.0 }
+                - zone_penalty_score
                 - distance_score;
         if best_score < score {
             best_score = score;
@@ -105,7 +108,7 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
     best_point
 }
 
-pub fn simulation(u1: &Unit, u2: &Unit) -> bool {
+pub fn simulation(u1: &Unit, u2: &Unit, allow_draw: bool) -> bool {
     if u1.weapon.is_none() { return false; }
     if u2.weapon.is_none() { return true; }
     let constants = get_constants();
@@ -149,5 +152,5 @@ pub fn simulation(u1: &Unit, u2: &Unit) -> bool {
         }
     }
     // println!("END!");
-    return h1 > 0.0 && h2 <= 0.0;
+    return (h1 > 0.0 || allow_draw) && h2 <= 0.0;
 }
