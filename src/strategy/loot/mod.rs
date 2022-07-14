@@ -1,3 +1,4 @@
+use std::any::Any;
 use itertools::Itertools;
 use libc::clone;
 use crate::model::{Item, Loot, Unit};
@@ -33,14 +34,16 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
                 }
                 Item::ShieldPotions { amount } => {
                     if unit.shield_potions < constants.max_shield_potions_in_inventory {
-                        (300.0 / unit.health / constants.unit_health).ceil() as i32
+                        (300.0 / (unit.health / constants.unit_health)).ceil() as i32
                     } else {
                         0
                     }
                 }
                 Item::Ammo { weapon_type_index, amount } => {
-                    let percent_of_max_ammo = ammo[weapon_type_index as usize] as f64 * constants.weapons[weapon_type_index as usize].max_inventory_ammo as f64;
-                    if percent_of_max_ammo == 0.0 {
+                    let percent_of_max_ammo = ammo[weapon_type_index as usize] as f64 / constants.weapons[weapon_type_index as usize].max_inventory_ammo as f64;
+                    if percent_of_max_ammo == 1.0 {
+                        0
+                    } else if percent_of_max_ammo == 0.0 {
                         weapon_type_index * 75
                     } else {
                         (weapon_type_index as f64 * 75.0 / percent_of_max_ammo).ceil() as i32

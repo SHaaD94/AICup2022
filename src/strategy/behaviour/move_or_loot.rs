@@ -1,15 +1,15 @@
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE, TRANSPARENT_GREEN};
-use crate::model::{Unit, UnitOrder, Vec2};
+use crate::model::{Loot, Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Pickup;
 use crate::strategy::behaviour::behaviour::{Behaviour, write_behaviour};
 use crate::strategy::holder::{get_constants, get_game, get_loot, remove_loot};
 use crate::strategy::loot::best_loot;
-use crate::strategy::util::{bullet_trace_score, get_projectile_traces};
+use crate::strategy::util::{bullet_trace_score, get_projectile_traces, rotate};
 
-pub struct MoveToCenterOrLoot {}
+pub struct MoveOrLoot {}
 
-impl Behaviour for MoveToCenterOrLoot {
+impl Behaviour for MoveOrLoot {
     fn should_use(&self, unit: &Unit) -> bool { true }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
@@ -19,10 +19,6 @@ impl Behaviour for MoveToCenterOrLoot {
         let constants = get_constants();
         let loot = get_loot();
         let best_not_intersecting_loot = best_loot(unit, loot, false);
-        let next_zone_center = Vec2 {
-            x: game.zone.next_center.x,
-            y: game.zone.next_center.y,
-        };
         let best_intersecting_loot = best_loot(unit, loot, true);
         let can_pickup = unit.aim == 0.0 && unit.action.is_none();
         if let Some(loot) = &best_intersecting_loot {
@@ -32,7 +28,15 @@ impl Behaviour for MoveToCenterOrLoot {
         }
         let traces = get_projectile_traces();
 
-        let goal = best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center);
+        let goal = match best_not_intersecting_loot {
+            None => {
+                let angle = (unit.position.clone() - game.zone.current_center.clone()).angle();
+                let next_point = rotate(game.zone.current_center.clone(), angle + 0.1, game.zone.current_radius * 0.85);
+                next_point
+            }
+            Some(g) => g.position,
+        };
+
         let result_move = unit.points_around_unit().iter()
             .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
             .min_by(|e1, e2| {
