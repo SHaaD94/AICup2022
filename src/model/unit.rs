@@ -61,6 +61,17 @@ impl Unit {
             shield_potions: 0,
         }
     }
+    pub fn points_in_radius(&self, radius: i32) -> Vec<Vec2> {
+        let mut res = Vec::new();
+        for x in 0..(radius * 2 + 1) {
+            for y in 0..(radius * 2 + 1) {
+                let p = Vec2 { x: self.position.x + x as f64 - radius as f64, y: self.position.y + y as f64 - radius as f64 };
+                if self.position.distance(&p) > radius as f64 { continue; }
+                res.push(p);
+            }
+        }
+        return res;
+    }
     pub fn points_around_unit(&self) -> Vec<Vec2> {
         let points_around = 10;
         let constants = get_constants();

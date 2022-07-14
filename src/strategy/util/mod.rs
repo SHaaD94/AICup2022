@@ -52,8 +52,8 @@ pub fn get_projectile_traces() -> Vec<Projectile> {
 
 pub fn bullet_trace_score(bullets: &Vec<Projectile>, pos: &Vec2) -> f64 {
     bullets.iter()
-        .filter(|b| b.position.distance(pos) <= get_constants().unit_radius)
+        .filter(|b| b.position.distance(pos) <= get_constants().unit_radius + 0.1)
         .unique_by(|b| b.id)
         .map(|b| get_constants().weapons[b.weapon_type_index as usize].projectile_damage)
-        .sum::<f64>() * 100.0
+        .sum::<f64>() * 10000.0
 }

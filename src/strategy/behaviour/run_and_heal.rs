@@ -37,34 +37,30 @@ impl Behaviour for RunAndHeal {
         let mut goal: Vec2 = Vec2::default();
         let obstacles = get_obstacles(unit.id);
         let traces = get_projectile_traces();
-        for x in 0..21 {
-            for y in 0..21 {
-                let p = Vec2 { x: unit.position.x + x as f64 - 10.0, y: unit.position.y + y as f64 - 10.0 };
-                if unit.position.distance(&p) > 10.0 { continue; }
-                if obstacles.iter().find(|o| o.position.distance(&p) < o.radius + get_constants().unit_radius).is_some() {
-                    continue;
-                }
-                if get_game().zone.current_center.distance(&p) + 5.0 >= get_game().zone.current_radius {
-                    continue;
-                }
-                if let Some(debug) = debug_interface.as_mut() {
-                    debug.add_circle(p.clone(), 0.1, RED.clone());
-                }
-                let enemy_score = get_units().iter().map(|e| {
-                    e.position.distance(&p)
-                }).min_by_key(|s| s.ceil() as i64).unwrap_or(0.0);
-                let distance_from_previous_score =
-                    if p.distance(&unit.position) > 3.0 {
-                        3.0
-                    } else {
-                        p.distance(&unit.position)
-                    };
-                let res = -enemy_score
-                    - distance_from_previous_score;
-                if res < top_score {
-                    goal = p;
-                    top_score = res;
-                }
+        for p in unit.points_in_radius(10) {
+            if obstacles.iter().find(|o| o.position.distance(&p) < o.radius + get_constants().unit_radius).is_some() {
+                continue;
+            }
+            if get_game().zone.current_center.distance(&p) + 3.0 >= get_game().zone.current_radius {
+                continue;
+            }
+            if let Some(debug) = debug_interface.as_mut() {
+                debug.add_circle(p.clone(), 0.1, RED.clone());
+            }
+            let enemy_score = get_units().iter().map(|e| {
+                e.position.distance(&p)
+            }).min_by_key(|s| s.ceil() as i64).unwrap_or(0.0);
+            let distance_from_previous_score =
+                if p.distance(&unit.position) > 3.0 {
+                    3.0
+                } else {
+                    p.distance(&unit.position)
+                };
+            let res = -enemy_score
+                - distance_from_previous_score;
+            if res < top_score {
+                goal = p;
+                top_score = res;
             }
         }
 

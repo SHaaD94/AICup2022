@@ -44,7 +44,6 @@ impl Behaviour for MoveToCenterOrLoot {
             .min_by(|e1, e2| {
                 f64::partial_cmp(&e1.1, &e2.1).unwrap()
             }).unwrap().0.clone();
-
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(result_move.clone(), 0.1, BLUE.clone());
             debug.add_circle(goal.clone(), 1.0, TRANSPARENT_BLUE.clone());

@@ -27,7 +27,7 @@ impl MyStrategy {
         update_game(game, debug_interface);
 
         if let Some(debug) = debug_interface.as_mut() {
-            // Self::draw_sounds(debug);
+            Self::draw_sounds(debug);
             // Self::draw_vision(debug);
             Self::draw_units(debug);
             Self::draw_points_around(debug);
