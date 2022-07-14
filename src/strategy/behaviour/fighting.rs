@@ -62,12 +62,17 @@ impl Behaviour for Fighting {
             debug.add_circle(goal.clone(), 1.0, TRANSPARENT_BLUE.clone());
         }
 
+        let ticks_until_next_shot = max(get_game().current_tick, unit.next_shot_tick) - get_game().current_tick;
+        let action = if ticks_until_next_shot as f64 <= weapon.ticks_to_aim() as f64 * (1.0 - unit.aim) {
+            Some(Aim { shoot: !intersects_with_obstacles && unit.is_inside_vision(&target.position) })
+        } else {
+            None
+        };
+
         UnitOrder {
             target_velocity: (result_move - unit.position.clone()) * 1000.0,
             target_direction: fire_target - unit.position.clone(),
-            action: Some(Aim {
-                shoot: !intersects_with_obstacles && unit.is_inside_vision(&target.position)
-            }),
+            action: action,
         }
     }
 }

@@ -33,6 +33,9 @@ pub struct WeaponProperties {
 }
 
 impl WeaponProperties {
+    pub fn ticks_to_aim(&self) -> i32 {
+        (self.aim_time * get_constants().ticks_per_second).ceil() as i32
+    }
     pub fn firing_distance(&self) -> f64 {
         self.projectile_speed * self.projectile_life_time
     }
