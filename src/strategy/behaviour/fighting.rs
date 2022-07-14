@@ -3,7 +3,7 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED, TRANSPARENT_BLUE};
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Aim;
-use crate::strategy::behaviour::behaviour::Behaviour;
+use crate::strategy::behaviour::behaviour::{Behaviour, write_behaviour};
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
 use crate::strategy::util::{bullet_trace_score, does_intersect, get_projectile_traces};
 
@@ -24,15 +24,7 @@ impl Behaviour for Fighting {
     }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
-        if let Some(debug) = debug_interface.as_mut() {
-            debug.add_placed_text(
-                unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
-                "Fighting".to_owned(),
-                Vec2 { x: 1.0, y: 1.0 },
-                1.0,
-                RED.clone(),
-            )
-        }
+        write_behaviour("Fighting".to_owned(), debug_interface);
 
         let game = get_game();
         let constants = get_constants();
@@ -53,11 +45,13 @@ impl Behaviour for Fighting {
             &get_obstacles(unit.id),
         );
         let goal = target.position.clone();
+
         let result_move = unit.points_around_unit().iter()
             .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
             .min_by(|e1, e2| {
                 f64::partial_cmp(&e1.1, &e2.1).unwrap()
             }).unwrap().0.clone();
+
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(result_move.clone(), 0.1, BLUE.clone());
             debug.add_circle(goal.clone(), 0.5, TRANSPARENT_BLUE.clone());

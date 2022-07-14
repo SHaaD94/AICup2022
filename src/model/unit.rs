@@ -61,6 +61,12 @@ impl Unit {
             shield_potions: 0,
         }
     }
+    pub fn firing_distance(&self) -> f64 {
+        match self.weapon {
+            None => { 0.0 }
+            Some(w) => { get_constants().weapons[w as usize].firing_distance() }
+        }
+    }
     pub fn points_in_radius(&self, radius: i32) -> Vec<Vec2> {
         let mut res = Vec::new();
         for x in 0..(radius * 2 + 1) {

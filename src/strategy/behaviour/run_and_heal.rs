@@ -3,7 +3,7 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE};
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::UseShieldPotion;
-use crate::strategy::behaviour::behaviour::Behaviour;
+use crate::strategy::behaviour::behaviour::{Behaviour, write_behaviour};
 use crate::strategy::behaviour::fighting::simulation;
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
 use crate::strategy::util::{bullet_trace_score, does_intersect, get_projectile_traces, rotate};
@@ -23,15 +23,7 @@ impl Behaviour for RunAndHeal {
     }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
-        if let Some(debug) = debug_interface.as_mut() {
-            debug.add_placed_text(
-                unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
-                "Running".to_owned(),
-                Vec2 { x: 1.0, y: 1.0 },
-                1.0,
-                RED.clone(),
-            )
-        }
+        write_behaviour("Run".to_owned(), debug_interface);
 
         let mut top_score: f64 = f64::MAX;
         let mut goal: Vec2 = Vec2::default();

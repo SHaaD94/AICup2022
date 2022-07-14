@@ -2,7 +2,7 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE, TRANSPARENT_GREEN};
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::Pickup;
-use crate::strategy::behaviour::behaviour::Behaviour;
+use crate::strategy::behaviour::behaviour::{Behaviour, write_behaviour};
 use crate::strategy::holder::{get_constants, get_game, get_loot, remove_loot};
 use crate::strategy::loot::best_loot;
 use crate::strategy::util::{bullet_trace_score, get_projectile_traces};
@@ -13,15 +13,7 @@ impl Behaviour for MoveToCenterOrLoot {
     fn should_use(&self, unit: &Unit) -> bool { true }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
-        if let Some(debug) = debug_interface.as_mut() {
-            debug.add_placed_text(
-                unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
-                "Move".to_owned(),
-                Vec2 { x: 1.0, y: 1.0 },
-                1.0,
-                RED.clone(),
-            )
-        }
+        write_behaviour("Move".to_owned(), debug_interface);
 
         let game = get_game();
         let constants = get_constants();
