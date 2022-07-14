@@ -41,18 +41,69 @@ pub struct Unit {
 }
 
 impl Unit {
+    pub fn default() -> Unit {
+        Unit {
+            id: 0,
+            player_id: 0,
+            health: 0.0,
+            shield: 0.0,
+            extra_lives: 0,
+            position: Default::default(),
+            remaining_spawn_time: None,
+            velocity: Default::default(),
+            direction: Default::default(),
+            aim: 0.0,
+            action: None,
+            health_regeneration_start_tick: 0,
+            weapon: None,
+            next_shot_tick: 0,
+            ammo: vec![],
+            shield_potions: 0,
+        }
+    }
+
+    pub fn is_inside_vision(&self, p: &Vec2) -> bool {
+        if self.position.distance(p) > get_constants().view_distance { return false; };
+        let (left_angle, right_angle) = self.view_segment_angles();
+        let angle = (p.clone() - self.position.clone()).angle();
+        (left_angle >= angle && right_angle <= angle) || (left_angle <= angle && right_angle >= angle)
+    }
+
+    pub fn firing_distance(&self) -> f64 {
+        match self.weapon {
+            None => { 0.0 }
+            Some(w) => { get_constants().weapons[w as usize].firing_distance() }
+        }
+    }
+    pub fn points_in_radius(&self, radius: i32) -> Vec<Vec2> {
+        let mut res = Vec::new();
+        for x in 0..(radius * 2 + 1) {
+            for y in 0..(radius * 2 + 1) {
+                let p = Vec2 { x: self.position.x + x as f64 - radius as f64, y: self.position.y + y as f64 - radius as f64 };
+                if self.position.distance(&p) > radius as f64 { continue; }
+                res.push(p);
+            }
+        }
+        return res;
+    }
     pub fn points_around_unit(&self) -> Vec<Vec2> {
-        let points_around = 50;
+        let points_around = 10;
+        let constants = get_constants();
+
+        let forward_point = self.position.clone() + (self.direction.clone() * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
+        let backward_point = self.position.clone() - (self.direction.clone() * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
+        let center = (forward_point.clone() + backward_point) / 2.0;
+        let radius = forward_point.distance(&center);
+
         let angle_diff = 2.0 * PI / points_around as f64;
         let mut res = Vec::new();
         let mut cur_angle = self.direction.angle();
         let obstacles = get_obstacles(self.id);
         for _ in 0..points_around {
-            let next_vec = rotate(self.position.clone(), cur_angle,
-                                  // 5.0 because it's pretty useful too not getting stuck in trees
-                                  get_constants().max_unit_forward_speed / get_constants().ticks_per_second * 5.0);
+            let next_vec = rotate(center.clone(), cur_angle, radius);
+            let next_vec_after_some_ticks = rotate(center.clone(), cur_angle, radius * 5.0);
             let intersects_with_obstacles = obstacles.iter()
-                .find(|o| o.position.distance(&next_vec) < o.radius + get_constants().unit_radius)
+                .find(|o| o.position.distance(&next_vec_after_some_ticks) < o.radius + get_constants().unit_radius)
                 .is_some();
             if !intersects_with_obstacles {
                 res.push(next_vec);

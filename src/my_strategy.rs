@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::sync::atomic::AtomicPtr;
+use std::time::{SystemTime, UNIX_EPOCH};
 use itertools::Itertools;
 use crate::debug_interface::DebugInterface;
 use ai_cup_22::*;
-use ai_cup_22::debugging::{BLUE, Color, GREEN, RED, TEAL, TRANSPARENT_GREEN};
+use ai_cup_22::debugging::{BLUE, Color, GREEN, YELLOW, RED, TEAL, TRANSPARENT_GREEN};
 use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
 use ai_cup_22::model::ActionOrder::Aim;
 use ai_cup_22::strategy::get_order;
 use ai_cup_22::strategy::holder::{get_constants, get_game, get_loot, get_obstacles, get_projectiles, get_units, set_constants, update_game};
+use ai_cup_22::strategy::util::get_projectile_traces;
 
 pub struct MyStrategy {}
 
@@ -23,16 +25,24 @@ impl MyStrategy {
         game: Game,
         debug_interface: &mut Option<&mut DebugInterface>,
     ) -> model::Order {
-        update_game(game);
+        // let start = SystemTime::now()
+        //     .duration_since(UNIX_EPOCH)
+        //     .expect("Time went backwards");
+        update_game(game, debug_interface);
 
         if let Some(debug) = debug_interface.as_mut() {
-            // Self::draw_sounds(debug);
+            Self::draw_sounds(debug);
             // Self::draw_vision(debug);
             Self::draw_units(debug);
-            Self::draw_loot(debug);
+            Self::draw_points_around(debug);
+            Self::draw_projectile_traces(debug)
+            // Self::draw_loot(debug);
             // Self::draw_projectiles(debug)
             // Self::draw_obstacles(debug)
         }
+        // println!("{}", SystemTime::now()
+        //     .duration_since(UNIX_EPOCH)
+        //     .expect("Time went backwards").as_nanos() - start.as_nanos());
         get_order(debug_interface)
     }
 
@@ -42,6 +52,19 @@ impl MyStrategy {
 
             debug.add_pie(u.position.clone(), get_constants().view_distance,
                           left_angle, right_angle, TRANSPARENT_GREEN.clone());
+        }
+    }
+    fn draw_projectile_traces(debug: &mut DebugInterface) {
+        for x in get_projectile_traces() {
+            debug.add_circle(x.position, 0.1, BLUE.clone());
+        }
+    }
+
+    fn draw_points_around(debug: &mut DebugInterface) {
+        for unit in get_game().my_units() {
+            for x in unit.points_around_unit() {
+                debug.add_circle(x, 0.1, GREEN.clone());
+            }
         }
     }
 
@@ -67,7 +90,7 @@ impl MyStrategy {
 
     fn draw_sounds(debug: &mut DebugInterface) {
         for x in &get_game().sounds {
-            debug.add_circle(x.position.clone(), 1.5, RED.clone())
+            debug.add_circle(x.position.clone(), 0.5 * ((x.type_index + 1) as f64), YELLOW.clone())
         }
     }
 

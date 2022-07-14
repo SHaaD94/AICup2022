@@ -14,6 +14,7 @@ pub struct Color {
 }
 
 pub static RED: Color = Color { r: 255.0, g: 0.0, b: 0.0, a: 1.0 };
+pub static YELLOW: Color = Color { r: 255.0, g: 165.0, b: 0.0, a: 1.0 };
 pub static GREEN: Color = Color { r: 0.0, g: 255.0, b: 0.0, a: 1.0 };
 pub static TRANSPARENT_GREEN: Color = Color { r: 0.0, g: 255.0, b: 0.0, a: 0.3 };
 pub static BLUE: Color = Color { r: 0.0, g: 0.0, b: 255.0, a: 1.0 };

@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Pointer};
 use std::ops;
+use crate::strategy::holder::get_game;
 use super::*;
 
 /// 2 dimensional vector.
@@ -58,6 +59,11 @@ impl ops::Div<f64> for Vec2 {
 }
 
 impl Vec2 {
+    pub fn is_inside_zone(&self) -> bool {
+        let game = get_game();
+        game.zone.current_center.distance(&self) + 3.0 <= game.zone.current_radius
+    }
+
     pub fn len(&self) -> f64 {
         (self.x.powf(2.0) + self.y.powf(2.0)).sqrt()
     }
