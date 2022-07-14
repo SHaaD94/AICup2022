@@ -62,17 +62,23 @@ impl Unit {
         }
     }
     pub fn points_around_unit(&self) -> Vec<Vec2> {
-        let points_around = 50;
+        let points_around = 10;
+        let constants = get_constants();
+
+        let forward_point = self.position.clone() + (self.direction.clone() * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
+        let backward_point = self.position.clone() - (self.direction.clone() * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
+        let center = (forward_point.clone() + backward_point) / 2.0;
+        let radius = forward_point.distance(&center);
+
         let angle_diff = 2.0 * PI / points_around as f64;
         let mut res = Vec::new();
         let mut cur_angle = self.direction.angle();
         let obstacles = get_obstacles(self.id);
         for _ in 0..points_around {
-            let next_vec = rotate(self.position.clone(), cur_angle,
-                                  // 5.0 because it's pretty useful too not getting stuck in trees
-                                  get_constants().max_unit_forward_speed / get_constants().ticks_per_second * 5.0);
+            let next_vec = rotate(center.clone(), cur_angle, radius);
+            let next_vec_after_some_ticks = rotate(center.clone(), cur_angle, radius * 5.0);
             let intersects_with_obstacles = obstacles.iter()
-                .find(|o| o.position.distance(&next_vec) < o.radius + get_constants().unit_radius)
+                .find(|o| o.position.distance(&next_vec_after_some_ticks) < o.radius + get_constants().unit_radius)
                 .is_some();
             if !intersects_with_obstacles {
                 res.push(next_vec);

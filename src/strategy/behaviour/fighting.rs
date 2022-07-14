@@ -54,16 +54,13 @@ impl Behaviour for Fighting {
         );
         let goal = target.position.clone();
         let result_move = unit.points_around_unit().iter()
-            .min_by_key(|e| (
-                bullet_trace_score(&traces, e)
-                    - e.distance(&unit.position)
-                    + e.distance(&goal)) as i32).unwrap().clone();
+            .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
+            .min_by(|e1, e2| {
+                f64::partial_cmp(&e1.1, &e2.1).unwrap()
+            }).unwrap().0.clone();
         if let Some(debug) = debug_interface.as_mut() {
-            debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
+            debug.add_circle(result_move.clone(), 0.1, BLUE.clone());
             debug.add_circle(goal.clone(), 0.5, TRANSPARENT_BLUE.clone());
-            for x in get_projectile_traces() {
-                debug.add_circle(x.position, 0.1, BLUE.clone());
-            }
         }
 
         UnitOrder {

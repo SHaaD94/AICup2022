@@ -9,6 +9,7 @@ use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
 use ai_cup_22::model::ActionOrder::Aim;
 use ai_cup_22::strategy::get_order;
 use ai_cup_22::strategy::holder::{get_constants, get_game, get_loot, get_obstacles, get_projectiles, get_units, set_constants, update_game};
+use ai_cup_22::strategy::util::get_projectile_traces;
 
 pub struct MyStrategy {}
 
@@ -29,6 +30,8 @@ impl MyStrategy {
             // Self::draw_sounds(debug);
             // Self::draw_vision(debug);
             Self::draw_units(debug);
+            Self::draw_points_around(debug);
+            Self::draw_projectile_traces(debug)
             // Self::draw_loot(debug);
             // Self::draw_projectiles(debug)
             // Self::draw_obstacles(debug)
@@ -42,6 +45,19 @@ impl MyStrategy {
 
             debug.add_pie(u.position.clone(), get_constants().view_distance,
                           left_angle, right_angle, TRANSPARENT_GREEN.clone());
+        }
+    }
+    fn draw_projectile_traces(debug: &mut DebugInterface) {
+        for x in get_projectile_traces() {
+            debug.add_circle(x.position, 0.1, BLUE.clone());
+        }
+    }
+
+    fn draw_points_around(debug: &mut DebugInterface) {
+        for unit in get_game().my_units() {
+            for x in unit.points_around_unit() {
+                debug.add_circle(x, 0.1, GREEN.clone());
+            }
         }
     }
 

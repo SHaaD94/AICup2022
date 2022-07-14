@@ -34,7 +34,7 @@ impl Behaviour for RunAndHeal {
         }
 
         let mut top_score: f64 = f64::MAX;
-        let mut top_point: Vec2 = Vec2::default();
+        let mut goal: Vec2 = Vec2::default();
         let obstacles = get_obstacles(unit.id);
         let traces = get_projectile_traces();
         for x in 0..21 {
@@ -62,30 +62,27 @@ impl Behaviour for RunAndHeal {
                 let res = -enemy_score
                     - distance_from_previous_score;
                 if res < top_score {
-                    top_point = p;
+                    goal = p;
                     top_score = res;
                 }
             }
         }
 
         let result_move = unit.points_around_unit().iter()
-            .min_by_key(|e| (
-                -e.distance(&unit.position)
-                    + bullet_trace_score(&traces, &e)
-                    + e.distance(&top_point)) as i32).unwrap().clone();
+            .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
+            .min_by(|e1, e2| {
+                f64::partial_cmp(&e1.1, &e2.1).unwrap()
+            }).unwrap().0.clone();
 
         let rotation = if get_game().current_tick % 100 >= 85 {
             Vec2 { x: -unit.direction.y, y: unit.direction.x }
         } else {
-            result_move.clone() - unit.position.clone()
+            goal.clone() - unit.position.clone()
         };
 
         if let Some(debug) = debug_interface.as_mut() {
-            // for x in unit.points_around_unit() {
-            //     debug.add_circle(x, 0.1, GREEN.clone());
-            // }
-            debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
-            debug.add_circle(top_point.clone(), 1.0, RED.clone());
+            debug.add_circle(result_move.clone(), 0.1, BLUE.clone());
+            debug.add_circle(goal.clone(), 1.0, RED.clone());
             for x in get_projectile_traces() {
                 debug.add_circle(x.position, 0.1, BLUE.clone());
             }

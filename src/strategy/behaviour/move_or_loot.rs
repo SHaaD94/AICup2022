@@ -38,24 +38,21 @@ impl Behaviour for MoveToCenterOrLoot {
         }
         let traces = get_projectile_traces();
 
-        let move_target = best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center);
+        let goal = best_not_intersecting_loot.map(|l| l.position).unwrap_or(next_zone_center);
         let result_move = unit.points_around_unit().iter()
-            .min_by_key(|e| (
-                - e.distance(&unit.position)
-                    + bullet_trace_score(&traces, &e)
-                    + e.distance(&move_target)) as i32).unwrap().clone();
-        if let Some(debug) = debug_interface.as_mut() {
-            debug.add_circle(result_move.clone(), 1.0, TRANSPARENT_BLUE.clone());
-            debug.add_circle(move_target.clone(), 0.5, TRANSPARENT_BLUE.clone());
+            .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
+            .min_by(|e1, e2| {
+                f64::partial_cmp(&e1.1, &e2.1).unwrap()
+            }).unwrap().0.clone();
 
-            for x in get_projectile_traces() {
-                debug.add_circle(x.position, 0.1, BLUE.clone());
-            }
+        if let Some(debug) = debug_interface.as_mut() {
+            debug.add_circle(result_move.clone(), 0.1, BLUE.clone());
+            debug.add_circle(goal.clone(), 1.0, TRANSPARENT_BLUE.clone());
         }
         let rotation = if get_game().current_tick % 100 >= 85 {
             Vec2 { x: -unit.direction.y, y: unit.direction.x }
         } else {
-            result_move.clone() - unit.position.clone()
+            (goal.clone() - unit.position.clone())
         };
 
         UnitOrder {
