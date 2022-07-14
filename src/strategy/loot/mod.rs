@@ -9,7 +9,11 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
     let ammo = unit.ammo.clone();
     let score2loot = loots.iter()
         .filter(|l| is_inside_zone(l))
-        .filter(|l| if !intersecting { unit.position.distance(&l.position) >= constants.unit_radius } else { unit.position.distance(&l.position) < constants.unit_radius })
+        .filter(|l| if !intersecting {
+            unit.position.distance(&l.position) >= constants.unit_radius
+        } else {
+            unit.position.distance(&l.position) < constants.unit_radius
+        })
         .map(|l| {
             let score: i32 = match l.item {
                 Item::Weapon { type_index } => {
@@ -56,5 +60,5 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
 
 fn is_inside_zone(loot: &Loot) -> bool {
     let game = get_game();
-    game.zone.current_center.distance(&loot.position) <= game.zone.current_radius
+    game.zone.current_center.distance(&loot.position) + 3.0 <= game.zone.current_radius
 }

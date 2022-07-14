@@ -24,7 +24,7 @@ impl Behaviour for Fighting {
     }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
-        write_behaviour("Fighting".to_owned(), debug_interface);
+        write_behaviour(unit, "Fighting".to_owned(), debug_interface);
 
         let game = get_game();
         let constants = get_constants();
@@ -61,7 +61,7 @@ impl Behaviour for Fighting {
             target_velocity: (result_move - unit.position.clone()) * 1000.0,
             target_direction: fire_target - unit.position.clone(),
             action: Some(Aim {
-                shoot: !intersects_with_obstacles
+                shoot: !intersects_with_obstacles && unit.is_inside_vision(&target.position)
             }),
         }
     }

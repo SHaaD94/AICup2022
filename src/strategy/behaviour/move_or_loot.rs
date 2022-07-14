@@ -13,7 +13,7 @@ impl Behaviour for MoveToCenterOrLoot {
     fn should_use(&self, unit: &Unit) -> bool { true }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
-        write_behaviour("Move".to_owned(), debug_interface);
+        write_behaviour(unit, "Move".to_owned(), debug_interface);
 
         let game = get_game();
         let constants = get_constants();
@@ -24,9 +24,11 @@ impl Behaviour for MoveToCenterOrLoot {
             y: game.zone.next_center.y,
         };
         let best_intersecting_loot = best_loot(unit, loot, true);
-
+        let can_pickup = unit.aim == 0.0 && unit.action.is_none();
         if let Some(loot) = &best_intersecting_loot {
-            unsafe { remove_loot(loot.id.clone()); }
+            if can_pickup {
+                unsafe { remove_loot(loot.id.clone()); }
+            }
         }
         let traces = get_projectile_traces();
 
@@ -46,11 +48,12 @@ impl Behaviour for MoveToCenterOrLoot {
             (goal.clone() - unit.position.clone())
         };
 
+        let pickup_action = if can_pickup { best_intersecting_loot.map(|l| Pickup { loot: l.id }) } else { None };
         UnitOrder {
             target_velocity: (result_move.clone() - unit.position.clone()) * 1000.0,
             target_direction: rotation,
             // target_direction: move_target.clone() - unit.position.clone(),
-            action: best_intersecting_loot.map(|l| Pickup { loot: l.id }),
+            action: pickup_action,
         }
     }
 }

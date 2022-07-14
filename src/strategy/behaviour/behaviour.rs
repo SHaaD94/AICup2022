@@ -14,7 +14,7 @@ pub trait Behaviour: Sync {
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder;
 }
 
-pub fn write_behaviour(text: String, debug_interface: &mut Option<&mut DebugInterface>) {
+pub fn write_behaviour(unit:&Unit, text: String, debug_interface: &mut Option<&mut DebugInterface>) {
     if let Some(debug) = debug_interface.as_mut() {
         debug.add_placed_text(
             unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },

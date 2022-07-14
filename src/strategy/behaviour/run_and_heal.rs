@@ -23,7 +23,7 @@ impl Behaviour for RunAndHeal {
     }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
-        write_behaviour("Run".to_owned(), debug_interface);
+        write_behaviour(unit, "Run".to_owned(), debug_interface);
 
         let mut top_score: f64 = f64::MAX;
         let mut goal: Vec2 = Vec2::default();

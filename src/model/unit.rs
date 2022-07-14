@@ -61,6 +61,14 @@ impl Unit {
             shield_potions: 0,
         }
     }
+
+    pub fn is_inside_vision(&self, p: &Vec2) -> bool {
+        if self.position.distance(p) > get_constants().view_distance { return false; };
+        let (left_angle, right_angle) = self.view_segment_angles();
+        let angle = (p.clone() - self.position.clone()).angle();
+        (left_angle >= angle && right_angle <= angle) || (left_angle <= angle && right_angle >= angle)
+    }
+
     pub fn firing_distance(&self) -> f64 {
         match self.weapon {
             None => { 0.0 }
