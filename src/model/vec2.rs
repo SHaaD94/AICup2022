@@ -1,7 +1,7 @@
+use super::*;
+use crate::strategy::holder::get_game;
 use std::fmt::{Display, Formatter, Pointer};
 use std::ops;
-use crate::strategy::holder::get_game;
-use super::*;
 
 /// 2 dimensional vector.
 #[derive(Clone, Debug, Default)]
@@ -74,7 +74,11 @@ impl Vec2 {
         let top = self.x * other_x + self.y * other_y;
         let res = top / self.len();
         // println!("({}), top :{}, {}, {}", self, top, res, res.acos());
-        if self.y < 0.0 { -res.acos() } else { res.acos() }
+        if self.y < 0.0 {
+            -res.acos()
+        } else {
+            res.acos()
+        }
     }
     pub fn distance(&self, other: &Vec2) -> f64 {
         ((self.x - other.x).powf(2.0) + (self.y - other.y).powf(2.0)).sqrt()
@@ -90,9 +94,6 @@ impl trans::Trans for Vec2 {
     fn read_from(reader: &mut dyn std::io::Read) -> std::io::Result<Self> {
         let x: f64 = trans::Trans::read_from(reader)?;
         let y: f64 = trans::Trans::read_from(reader)?;
-        Ok(Self {
-            x,
-            y,
-        })
+        Ok(Self { x, y })
     }
 }

@@ -1,5 +1,5 @@
-use crate::strategy::holder::get_constants;
 use super::*;
+use crate::strategy::holder::get_constants;
 
 /// Weapon properties
 #[derive(Clone, Debug)]

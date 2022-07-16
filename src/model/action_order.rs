@@ -9,16 +9,14 @@ pub enum ActionOrder {
         loot: i32,
     },
     /// Use shield potion
-    UseShieldPotion {
-    },
+    UseShieldPotion {},
     /// Drop shield potions on the ground
     DropShieldPotions {
         /// Amount of potions
         amount: i32,
     },
     /// Drop current weapon
-    DropWeapon {
-    },
+    DropWeapon {},
     /// Drop ammo
     DropAmmo {
         /// Weapon type index (starting with 0)
@@ -36,24 +34,18 @@ pub enum ActionOrder {
 impl trans::Trans for ActionOrder {
     fn write_to(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         match self {
-            Self::Pickup {
-                loot,
-            } => {
+            Self::Pickup { loot } => {
                 <i32 as trans::Trans>::write_to(&0, writer)?;
                 loot.write_to(writer)?;
             }
-            Self::UseShieldPotion {
-            } => {
+            Self::UseShieldPotion {} => {
                 <i32 as trans::Trans>::write_to(&1, writer)?;
             }
-            Self::DropShieldPotions {
-                amount,
-            } => {
+            Self::DropShieldPotions { amount } => {
                 <i32 as trans::Trans>::write_to(&2, writer)?;
                 amount.write_to(writer)?;
             }
-            Self::DropWeapon {
-            } => {
+            Self::DropWeapon {} => {
                 <i32 as trans::Trans>::write_to(&3, writer)?;
             }
             Self::DropAmmo {
@@ -64,9 +56,7 @@ impl trans::Trans for ActionOrder {
                 weapon_type_index.write_to(writer)?;
                 amount.write_to(writer)?;
             }
-            Self::Aim {
-                shoot,
-            } => {
+            Self::Aim { shoot } => {
                 <i32 as trans::Trans>::write_to(&5, writer)?;
                 shoot.write_to(writer)?;
             }
@@ -78,24 +68,14 @@ impl trans::Trans for ActionOrder {
         match tag {
             0 => {
                 let loot: i32 = trans::Trans::read_from(reader)?;
-                Ok(Self::Pickup {
-                    loot,
-                })
+                Ok(Self::Pickup { loot })
             }
-            1 => {
-                Ok(Self::UseShieldPotion {
-                })
-            }
+            1 => Ok(Self::UseShieldPotion {}),
             2 => {
                 let amount: i32 = trans::Trans::read_from(reader)?;
-                Ok(Self::DropShieldPotions {
-                    amount,
-                })
+                Ok(Self::DropShieldPotions { amount })
             }
-            3 => {
-                Ok(Self::DropWeapon {
-                })
-            }
+            3 => Ok(Self::DropWeapon {}),
             4 => {
                 let weapon_type_index: i32 = trans::Trans::read_from(reader)?;
                 let amount: i32 = trans::Trans::read_from(reader)?;
@@ -106,13 +86,12 @@ impl trans::Trans for ActionOrder {
             }
             5 => {
                 let shoot: bool = trans::Trans::read_from(reader)?;
-                Ok(Self::Aim {
-                    shoot,
-                })
+                Ok(Self::Aim { shoot })
             }
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Unexpected tag {:?}", tag))),
+                format!("Unexpected tag {:?}", tag),
+            )),
         }
     }
 }

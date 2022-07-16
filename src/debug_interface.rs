@@ -1,5 +1,5 @@
-use crate::{codegame, debugging, model};
 use crate::trans::Trans;
+use crate::{codegame, debugging, model};
 
 pub struct DebugInterface<'a> {
     reader: &'a mut dyn std::io::Read,
@@ -11,32 +11,108 @@ impl<'a> DebugInterface<'a> {
         Self { reader, writer }
     }
 
-    pub fn add_placed_text(&mut self, position: model::Vec2, text: String, alignment: model::Vec2, size: f64, color: debugging::Color) {
-        self.add(debugging::DebugData::PlacedText { position, text, alignment, size, color });
+    pub fn add_placed_text(
+        &mut self,
+        position: model::Vec2,
+        text: String,
+        alignment: model::Vec2,
+        size: f64,
+        color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::PlacedText {
+            position,
+            text,
+            alignment,
+            size,
+            color,
+        });
     }
 
     pub fn add_circle(&mut self, position: model::Vec2, radius: f64, color: debugging::Color) {
-        self.add(debugging::DebugData::Circle { position, radius, color });
+        self.add(debugging::DebugData::Circle {
+            position,
+            radius,
+            color,
+        });
     }
 
-    pub fn add_gradient_circle(&mut self, position: model::Vec2, radius: f64, inner_color: debugging::Color, outer_color: debugging::Color) {
-        self.add(debugging::DebugData::GradientCircle { position, radius, inner_color, outer_color });
+    pub fn add_gradient_circle(
+        &mut self,
+        position: model::Vec2,
+        radius: f64,
+        inner_color: debugging::Color,
+        outer_color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::GradientCircle {
+            position,
+            radius,
+            inner_color,
+            outer_color,
+        });
     }
 
-    pub fn add_ring(&mut self, position: model::Vec2, radius: f64, width: f64, color: debugging::Color) {
-        self.add(debugging::DebugData::Ring { position, radius, width, color });
+    pub fn add_ring(
+        &mut self,
+        position: model::Vec2,
+        radius: f64,
+        width: f64,
+        color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::Ring {
+            position,
+            radius,
+            width,
+            color,
+        });
     }
 
-    pub fn add_pie(&mut self, position: model::Vec2, radius: f64, start_angle: f64, end_angle: f64, color: debugging::Color) {
-        self.add(debugging::DebugData::Pie { position, radius, start_angle, end_angle, color });
+    pub fn add_pie(
+        &mut self,
+        position: model::Vec2,
+        radius: f64,
+        start_angle: f64,
+        end_angle: f64,
+        color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::Pie {
+            position,
+            radius,
+            start_angle,
+            end_angle,
+            color,
+        });
     }
 
-    pub fn add_arc(&mut self, position: model::Vec2, radius: f64, width: f64, start_angle: f64, end_angle: f64, color: debugging::Color) {
-        self.add(debugging::DebugData::Arc { position, radius, width, start_angle, end_angle, color });
+    pub fn add_arc(
+        &mut self,
+        position: model::Vec2,
+        radius: f64,
+        width: f64,
+        start_angle: f64,
+        end_angle: f64,
+        color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::Arc {
+            position,
+            radius,
+            width,
+            start_angle,
+            end_angle,
+            color,
+        });
     }
 
-    pub fn add_rect(&mut self, bottom_left: model::Vec2, size: model::Vec2, color: debugging::Color) {
-        self.add(debugging::DebugData::Rect { bottom_left, size, color });
+    pub fn add_rect(
+        &mut self,
+        bottom_left: model::Vec2,
+        size: model::Vec2,
+        color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::Rect {
+            bottom_left,
+            size,
+            color,
+        });
     }
 
     pub fn add_polygon(&mut self, vertices: Vec<model::Vec2>, color: debugging::Color) {
@@ -47,16 +123,49 @@ impl<'a> DebugInterface<'a> {
         self.add(debugging::DebugData::GradientPolygon { vertices });
     }
 
-    pub fn add_segment(&mut self, first_end: model::Vec2, second_end: model::Vec2, width: f64, color: debugging::Color) {
-        self.add(debugging::DebugData::Segment { first_end, second_end, width, color });
+    pub fn add_segment(
+        &mut self,
+        first_end: model::Vec2,
+        second_end: model::Vec2,
+        width: f64,
+        color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::Segment {
+            first_end,
+            second_end,
+            width,
+            color,
+        });
     }
 
-    pub fn add_gradient_segment(&mut self, first_end: model::Vec2, first_color: debugging::Color, second_end: model::Vec2, second_color: debugging::Color, width: f64) {
-        self.add(debugging::DebugData::GradientSegment { first_end, first_color, second_end, second_color, width });
+    pub fn add_gradient_segment(
+        &mut self,
+        first_end: model::Vec2,
+        first_color: debugging::Color,
+        second_end: model::Vec2,
+        second_color: debugging::Color,
+        width: f64,
+    ) {
+        self.add(debugging::DebugData::GradientSegment {
+            first_end,
+            first_color,
+            second_end,
+            second_color,
+            width,
+        });
     }
 
-    pub fn add_poly_line(&mut self, vertices: Vec<model::Vec2>, width: f64, color: debugging::Color) {
-        self.add(debugging::DebugData::PolyLine { vertices, width, color });
+    pub fn add_poly_line(
+        &mut self,
+        vertices: Vec<model::Vec2>,
+        width: f64,
+        color: debugging::Color,
+    ) {
+        self.add(debugging::DebugData::PolyLine {
+            vertices,
+            width,
+            color,
+        });
     }
 
     pub fn add_gradient_poly_line(&mut self, vertices: Vec<debugging::ColoredVertex>, width: f64) {

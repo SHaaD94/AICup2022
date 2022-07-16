@@ -1,0 +1,21 @@
+{
+  "seed": null,
+  "game": {
+    "Create": "Round1"
+  },
+  "players": [
+    {
+      "Tcp": {
+        "port": 31001,
+        "accept_timeout": 10,
+        "single_timeout": 1,
+        "total_time_limit": null,
+        "run": {
+          "run_command": [
+            "../target/release/ai-cup-22"
+          ]
+        }
+      }
+    }
+  ]
+}

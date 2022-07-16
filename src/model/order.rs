@@ -13,9 +13,8 @@ impl trans::Trans for Order {
         Ok(())
     }
     fn read_from(reader: &mut dyn std::io::Read) -> std::io::Result<Self> {
-        let unit_orders: std::collections::HashMap<i32, model::UnitOrder> = trans::Trans::read_from(reader)?;
-        Ok(Self {
-            unit_orders,
-        })
+        let unit_orders: std::collections::HashMap<i32, model::UnitOrder> =
+            trans::Trans::read_from(reader)?;
+        Ok(Self { unit_orders })
     }
 }

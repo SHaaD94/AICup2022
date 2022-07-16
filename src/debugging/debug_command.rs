@@ -9,39 +9,31 @@ pub enum DebugCommand {
         debug_data: debugging::DebugData,
     },
     /// Clear current tick's debug data
-    Clear {
-    },
+    Clear {},
     /// Enable/disable auto performing of commands
     SetAutoFlush {
         /// Enable/disable autoflush
         enable: bool,
     },
     /// Perform all previously sent commands
-    Flush {
-    },
+    Flush {},
 }
 
 impl trans::Trans for DebugCommand {
     fn write_to(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         match self {
-            Self::Add {
-                debug_data,
-            } => {
+            Self::Add { debug_data } => {
                 <i32 as trans::Trans>::write_to(&0, writer)?;
                 debug_data.write_to(writer)?;
             }
-            Self::Clear {
-            } => {
+            Self::Clear {} => {
                 <i32 as trans::Trans>::write_to(&1, writer)?;
             }
-            Self::SetAutoFlush {
-                enable,
-            } => {
+            Self::SetAutoFlush { enable } => {
                 <i32 as trans::Trans>::write_to(&2, writer)?;
                 enable.write_to(writer)?;
             }
-            Self::Flush {
-            } => {
+            Self::Flush {} => {
                 <i32 as trans::Trans>::write_to(&3, writer)?;
             }
         }
@@ -52,27 +44,18 @@ impl trans::Trans for DebugCommand {
         match tag {
             0 => {
                 let debug_data: debugging::DebugData = trans::Trans::read_from(reader)?;
-                Ok(Self::Add {
-                    debug_data,
-                })
+                Ok(Self::Add { debug_data })
             }
-            1 => {
-                Ok(Self::Clear {
-                })
-            }
+            1 => Ok(Self::Clear {}),
             2 => {
                 let enable: bool = trans::Trans::read_from(reader)?;
-                Ok(Self::SetAutoFlush {
-                    enable,
-                })
+                Ok(Self::SetAutoFlush { enable })
             }
-            3 => {
-                Ok(Self::Flush {
-                })
-            }
+            3 => Ok(Self::Flush {}),
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Unexpected tag {:?}", tag))),
+                format!("Unexpected tag {:?}", tag),
+            )),
         }
     }
 }

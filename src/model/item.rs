@@ -25,15 +25,11 @@ pub enum Item {
 impl trans::Trans for Item {
     fn write_to(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
         match self {
-            Self::Weapon {
-                type_index,
-            } => {
+            Self::Weapon { type_index } => {
                 <i32 as trans::Trans>::write_to(&0, writer)?;
                 type_index.write_to(writer)?;
             }
-            Self::ShieldPotions {
-                amount,
-            } => {
+            Self::ShieldPotions { amount } => {
                 <i32 as trans::Trans>::write_to(&1, writer)?;
                 amount.write_to(writer)?;
             }
@@ -53,15 +49,11 @@ impl trans::Trans for Item {
         match tag {
             0 => {
                 let type_index: i32 = trans::Trans::read_from(reader)?;
-                Ok(Self::Weapon {
-                    type_index,
-                })
+                Ok(Self::Weapon { type_index })
             }
             1 => {
                 let amount: i32 = trans::Trans::read_from(reader)?;
-                Ok(Self::ShieldPotions {
-                    amount,
-                })
+                Ok(Self::ShieldPotions { amount })
             }
             2 => {
                 let weapon_type_index: i32 = trans::Trans::read_from(reader)?;
@@ -73,7 +65,8 @@ impl trans::Trans for Item {
             }
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Unexpected tag {:?}", tag))),
+                format!("Unexpected tag {:?}", tag),
+            )),
         }
     }
 }
