@@ -63,6 +63,15 @@ impl Unit {
         }
     }
 
+    pub fn ammo_for_current_weapon(&self) -> i32 {
+        match self.weapon {
+            None => { 0 }
+            Some(w) => {
+                self.ammo[w as usize]
+            }
+        }
+    }
+
     pub fn my_other_units(&self) -> Vec<&Unit> {
         get_game()
             .my_units()

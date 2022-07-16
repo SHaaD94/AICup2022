@@ -100,7 +100,14 @@ impl Behaviour for Fighting {
 fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) -> Vec2 {
     let mut best_point = Vec2::default();
     let mut best_score = f64::MIN;
+    let constants = get_constants();
     for p in unit.points_in_radius(10) {
+        if obstacles.iter().find(|o| o.position.distance(&p) < o.radius + constants.unit_radius).is_some() {
+            continue;
+        }
+        if unit.my_other_units().iter().find(|o| o.position.distance(&p) < constants.unit_radius * 4.0).is_some() {
+            continue;
+        }
         let (units_in_firing_distance, units_not_in_firing_distance): (Vec<_>, Vec<_>) =
             get_all_enemy_units()
                 .iter()

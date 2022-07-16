@@ -22,9 +22,10 @@ pub fn write_behaviour(
     debug_interface: &mut Option<&mut DebugInterface>,
 ) {
     if let Some(debug) = debug_interface.as_mut() {
+        let result_text = format!("{}, {}, {}", text, unit.weapon.unwrap_or(0), unit.ammo_for_current_weapon());
         debug.add_placed_text(
             unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
-            text,
+            result_text,
             Vec2 { x: 1.0, y: 1.0 },
             1.0,
             RED.clone(),

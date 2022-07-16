@@ -48,6 +48,32 @@ impl Behaviour for MoveOrLoot {
             Some(g) => g.position,
         };
 
+        let goal = match unit.my_closest_other_unit() {
+            None => goal,
+            Some(other) => {
+                // finding a leader
+                let leader = if other.weapon.unwrap_or(0) < unit.weapon.unwrap_or(0) {
+                    other
+                } else if other.weapon.unwrap_or(0) > unit.weapon.unwrap_or(0) {
+                    unit
+                } else if other.ammo_for_current_weapon() < unit.ammo_for_current_weapon() {
+                    other
+                } else if other.ammo_for_current_weapon() > unit.ammo_for_current_weapon() {
+                    unit
+                }  else if other.id < unit.id {
+                    other
+                } else {
+                    unit
+                };
+
+                if unit.id == leader.id {
+                    goal
+                } else {
+                    other.position
+                }
+            }
+        };
+
         let result_move = unit
             .points_around_unit(true)
             .iter()

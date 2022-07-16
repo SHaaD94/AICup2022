@@ -13,10 +13,10 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
         .iter()
         .filter(|l| !is_loot_booked(&l.id))
         .filter(|l| is_inside_zone(l))
-        .filter(|l| match unit.my_closest_other_unit() {
-            None => { true }
-            Some(other) => other.position.distance(&l.position) < 30.0 || unit.position.distance(&l.position) < 10.0
-        })
+        // .filter(|l| match unit.my_closest_other_unit() {
+        //     None => { true }
+        //     Some(other) => other.position.distance(&l.position) < 30.0 || unit.position.distance(&l.position) < 10.0
+        // })
         .filter(|l| {
             get_all_enemy_units()
                 .iter()
