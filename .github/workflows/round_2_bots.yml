@@ -28,7 +28,7 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - name: Rrun game
+      - name: Run game
         run: |
           cd runner
           tar -xzf runner.gz
