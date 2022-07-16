@@ -50,7 +50,7 @@ impl Behaviour for MoveOrLoot {
 
         let goal = match unit.my_closest_other_unit() {
             None => goal,
-            Some(other) => {
+            Some((distance, other)) => {
                 // finding a leader
                 let leader = if other.weapon.unwrap_or(0) < unit.weapon.unwrap_or(0) {
                     other
@@ -60,13 +60,18 @@ impl Behaviour for MoveOrLoot {
                     other
                 } else if other.ammo_for_current_weapon() > unit.ammo_for_current_weapon() {
                     unit
-                }  else if other.id < unit.id {
+                } else if other.id < unit.id {
                     other
                 } else {
                     unit
                 };
+                if let Some(d) = debug_interface {
+                    d.add_circle(leader.position, 1.0, TRANSPARENT_GREEN)
+                }
 
                 if unit.id == leader.id {
+                    goal
+                } else if distance < 5.0 || other.position.distance(&goal) < 5.0 {
                     goal
                 } else {
                     other.position

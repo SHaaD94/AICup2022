@@ -49,7 +49,7 @@ pub fn my_units_collision_score(p: &Vec2, unit: &Unit) -> f64 {
     match unit.my_closest_other_unit() {
         None => 0.0,
         Some(other) => {
-            let distance = other.position.distance(p);
+            let distance = other.1.position.distance(p);
             if distance <= 3.0 {
                 (3.0 - distance) * 100.0
             } else {
@@ -63,7 +63,7 @@ pub fn my_units_magnet_score(p: &Vec2, unit: &Unit) -> f64 {
     match unit.my_closest_other_unit() {
         None => 0.0,
         Some(other) => {
-            let distance = other.position.distance(p);
+            let distance = other.1.position.distance(p);
             distance * 0.5
         }
     }

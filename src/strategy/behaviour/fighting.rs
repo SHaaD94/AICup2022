@@ -55,19 +55,22 @@ impl Behaviour for Fighting {
             + (target.velocity.clone() * unit.position.distance(&target.position)
             / weapon.projectile_speed);
 
-        let intersects_with_obstacles = intersects_with_obstacles(
-            unit.position.x,
-            unit.position.y,
-            fire_target.x,
-            fire_target.y,
+        let intersects_with_obstacles = intersects_with_obstacles_vec(
+            &unit.position,
+            &fire_target,
             obstacles,
+        );
+        let intersects_with_friends = intersects_with_units_vec(
+            &unit.position,
+            &fire_target,
+            &unit.my_other_units(),
         );
         let goal = get_best_firing_spot(unit, &target, obstacles);
 
         let result_move = unit
             .points_around_unit(true)
             .iter()
-            .map(|p| (p, bullet_trace_score(&traces, &p) + my_units_collision_score(&p, unit) + p.distance(&goal)))
+            .map(|p| (p, bullet_trace_score(&traces, &p) /*+ my_units_collision_score(&p, unit)*/ + p.distance(&goal)))
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
             .unwrap()
             .0
@@ -83,7 +86,7 @@ impl Behaviour for Fighting {
         let action =
             if ticks_until_next_shot as f64 <= weapon.ticks_to_aim() as f64 * (1.0 - unit.aim) {
                 Some(Aim {
-                    shoot: !intersects_with_obstacles && unit.is_inside_vision(&target.position),
+                    shoot: !intersects_with_friends && !intersects_with_obstacles && unit.is_inside_vision(&target.position),
                 })
             } else {
                 None

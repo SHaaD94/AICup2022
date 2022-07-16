@@ -33,6 +33,7 @@ pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Or
     let orders: HashMap<i32, UnitOrder> = game
         .my_units()
         .into_iter()
+        .sorted_by_key(|e| e.id)
         .map(|u| {
             let mut order: UnitOrder = UnitOrder {
                 target_velocity: Default::default(),

@@ -9,14 +9,11 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
     let constants = get_constants();
     let current_weapon = unit.weapon;
     let ammo = unit.ammo.clone();
-    let score2loot = loots
+    loots
         .iter()
         .filter(|l| !is_loot_booked(&l.id))
         .filter(|l| is_inside_zone(l))
-        // .filter(|l| match unit.my_closest_other_unit() {
-        //     None => { true }
-        //     Some(other) => other.position.distance(&l.position) < 30.0 || unit.position.distance(&l.position) < 10.0
-        // })
+        .filter(|l| is_loot_needed(l, unit))
         .filter(|l| {
             get_all_enemy_units()
                 .iter()
@@ -72,29 +69,59 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
                     }
                 }
             };
-            (score.clone(), l)
+            // println!("{}, {}, {}", match l.item {
+            //     Item::Weapon { .. } => { "w" }
+            //     Item::ShieldPotions { .. } => { "shield" }
+            //     Item::Ammo { .. } => { "ammo" }
+            // }, score, -l.position.distance(&unit.position) + my_units_magnet_score(&l.position, unit));
+            (score.clone() as f64 - l.position.distance(&unit.position), l)
         })
-        .filter(|e| e.0 > 0)
-        .collect_vec();
-    let max = score2loot.iter().max_by_key(|e| e.0);
-    max.map(|(score, _)| {
-        score2loot
-            .iter()
-            .filter(|e| &e.0 == score)
-            .map(|e| e.1)
-            .min_by(|a, b| {
-                fn score(p: &Vec2, unit: &Unit) -> f64 {
-                    p.distance(&unit.position)
-                        - my_units_magnet_score(&p, unit)
-                }
-                score(&a.position, unit).partial_cmp(&score(&b.position, unit)).unwrap()
-            })
-            .map(|e| e.clone())
-    })
-        .flatten()
+        .max_by(|(score1, _), (score2, _)| score1.partial_cmp(score2).unwrap())
+        .map(|e| e.1.clone())
 }
 
 fn is_inside_zone(loot: &Loot) -> bool {
     let game = get_game();
     game.zone.current_center.distance(&loot.position) + 3.0 <= game.zone.current_radius
+}
+
+fn is_loot_needed(l: &Loot, unit: &Unit) -> bool {
+    let constants = get_constants();
+    let current_weapon = unit.weapon;
+    let ammo = unit.ammo.clone();
+
+    match l.item {
+        Item::Weapon { type_index } => {
+            if current_weapon.is_none() {
+                true
+            } else {
+                if current_weapon.unwrap() < type_index {
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+        Item::ShieldPotions { amount } => {
+            if unit.shield_potions < constants.max_shield_potions_in_inventory {
+                true
+            } else {
+                false
+            }
+        }
+        Item::Ammo {
+            weapon_type_index,
+            amount,
+        } => {
+            let percent_of_max_ammo = ammo[weapon_type_index as usize] as f64
+                / constants.weapons[weapon_type_index as usize].max_inventory_ammo as f64;
+            if percent_of_max_ammo == 1.0 {
+                false
+            } else if percent_of_max_ammo == 0.0 {
+                true
+            } else {
+                true
+            }
+        }
+    }
 }

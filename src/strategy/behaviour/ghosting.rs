@@ -25,7 +25,7 @@ impl Behaviour for Ghosting {
             } else {
                 match unit.my_closest_other_unit() {
                     None => loot_or_near_the_zone(unit, game),
-                    Some(u) => u.position,
+                    Some(u) => u.1.position,
                 }
             };
 

@@ -80,14 +80,14 @@ impl Unit {
             .collect_vec()
     }
 
-    pub fn my_closest_other_unit(&self) -> Option<&Unit> {
+    pub fn my_closest_other_unit(&self) -> Option<(f64, &Unit)> {
         get_game()
             .my_units()
             .into_iter()
             .filter(|e| self.id != e.id)
             .filter(|e| e.remaining_spawn_time.is_none())
-            .min_by(|a, b| self.position.distance(&a.position)
-                .partial_cmp(&self.position.distance(&b.position)).unwrap())
+            .map(|e| (e.position.distance(&self.position), e))
+            .min_by(|(d1, _), (d2, _)| d1.partial_cmp(d2).unwrap())
     }
 
     pub fn is_inside_vision(&self, p: &Vec2) -> bool {

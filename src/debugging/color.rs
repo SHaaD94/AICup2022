@@ -1,7 +1,7 @@
 use super::*;
 
 /// RGBA Color
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct Color {
     /// Red component
     pub r: f64,

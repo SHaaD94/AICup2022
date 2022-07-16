@@ -2,7 +2,7 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE};
 use crate::model::ActionOrder::UseShieldPotion;
 use crate::model::{Unit, UnitOrder, Vec2};
-use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour};
+use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour, my_units_magnet_score};
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_enemy_units};
 use crate::strategy::util::{bullet_trace_score, intersects_with_obstacles, get_projectile_traces, rotate};
 use std::env::set_current_dir;
@@ -53,7 +53,7 @@ impl Behaviour for RunAndHeal {
             } else {
                 p.distance(&unit.position)
             };
-            let res = -enemy_score - distance_from_previous_score;
+            let res = -enemy_score - distance_from_previous_score + (my_units_magnet_score(&p, unit) / 2.0);
             if res < top_score {
                 goal = p;
                 top_score = res;
