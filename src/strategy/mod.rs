@@ -17,12 +17,14 @@ use crate::strategy::holder::{get_constants, get_game};
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::ops::Index;
+use crate::strategy::behaviour::ghosting::Ghosting;
 
 pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Order {
     let game = get_game();
     let constants = get_constants();
 
     let behaviours: Vec<Box<dyn Behaviour>> = vec![
+        Box::new(Ghosting {}),
         Box::new(Fighting {}),
         Box::new(RunAndHeal {}),
         Box::new(MoveOrLoot {}),

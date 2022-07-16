@@ -1,7 +1,8 @@
 use super::*;
-use crate::strategy::holder::{get_constants, get_obstacles};
+use crate::strategy::holder::{get_constants, get_game, get_obstacles};
 use crate::strategy::util::rotate;
 use std::f64::consts::PI;
+use itertools::Itertools;
 
 /// A unit
 #[derive(Clone, Debug)]
@@ -62,6 +63,24 @@ impl Unit {
         }
     }
 
+    pub fn my_other_units(&self) -> Vec<&Unit> {
+        get_game()
+            .my_units()
+            .into_iter()
+            .filter(|e| self.id != e.id)
+            .collect_vec()
+    }
+
+    pub fn my_closest_other_unit(&self) -> Option<&Unit> {
+        get_game()
+            .my_units()
+            .into_iter()
+            .filter(|e| self.id != e.id)
+            .filter(|e| e.remaining_spawn_time.is_none())
+            .min_by(|a, b| self.position.distance(&a.position)
+                .partial_cmp(&self.position.distance(&b.position)).unwrap())
+    }
+
     pub fn is_inside_vision(&self, p: &Vec2) -> bool {
         if self.position.distance(p) > get_constants().view_distance {
             return false;
@@ -94,16 +113,16 @@ impl Unit {
         }
         return res;
     }
-    pub fn points_around_unit(&self) -> Vec<Vec2> {
+    pub fn points_around_unit(&self, check_obstacles: bool) -> Vec<Vec2> {
         let points_around = 10;
         let constants = get_constants();
 
         let forward_point = self.position.clone()
             + (self.direction.clone()
-                * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
+            * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
         let backward_point = self.position.clone()
             - (self.direction.clone()
-                * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
+            * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
         let center = (forward_point.clone() + backward_point) / 2.0;
         let radius = forward_point.distance(&center);
 
@@ -121,7 +140,7 @@ impl Unit {
                         < o.radius + get_constants().unit_radius
                 })
                 .is_some();
-            if !intersects_with_obstacles {
+            if !intersects_with_obstacles || !check_obstacles {
                 res.push(next_vec);
             }
             cur_angle += angle_diff;
@@ -137,7 +156,7 @@ impl Unit {
             .map(|e| {
                 default_view
                     - (default_view - get_constants().weapons[e as usize].aim_field_of_view)
-                        * self.aim
+                    * self.aim
             })
             .unwrap_or(default_view)
             * PI

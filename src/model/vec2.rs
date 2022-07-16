@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter, Pointer};
 use std::ops;
 
 /// 2 dimensional vector.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Copy)]
 pub struct Vec2 {
     /// `x` coordinate of the vector
     pub x: f64,

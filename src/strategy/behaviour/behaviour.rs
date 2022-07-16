@@ -4,10 +4,10 @@ use crate::model::ActionOrder::{Aim, Pickup, UseShieldPotion};
 use crate::model::Item::ShieldPotions;
 use crate::model::{ActionOrder, Loot, Unit, UnitOrder, Vec2};
 use crate::strategy::holder::{
-    get_constants, get_game, get_loot, get_obstacles, get_units, remove_loot,
+    get_constants, get_game, get_loot, get_obstacles, get_all_enemy_units, remove_loot,
 };
 use crate::strategy::loot::best_loot;
-use crate::strategy::util::does_intersect;
+use crate::strategy::util::intersects_with_obstacles;
 use itertools::Itertools;
 use std::cmp::min;
 
@@ -29,5 +29,41 @@ pub fn write_behaviour(
             1.0,
             RED.clone(),
         )
+    }
+}
+
+pub fn zone_penalty(p: &Vec2) -> f64 {
+    let distance_to_zone_center = p.distance(&get_game().zone.current_center);
+    let zone_penalty_score = if distance_to_zone_center / &get_game().zone.current_radius > 0.9
+    {
+        distance_to_zone_center * 50.0
+    } else {
+        0.0
+    };
+    zone_penalty_score
+}
+
+// more is worse
+pub fn my_units_collision_score(p: &Vec2, unit: &Unit) -> f64 {
+    match unit.my_closest_other_unit() {
+        None => 0.0,
+        Some(other) => {
+            let distance = other.position.distance(p);
+            if distance <= 3.0 {
+                (3.0 - distance) * 100.0
+            } else {
+                0.0
+            }
+        }
+    }
+}
+
+pub fn my_units_magnet_score(p: &Vec2, unit: &Unit) -> f64 {
+    match unit.my_closest_other_unit() {
+        None => 0.0,
+        Some(other) => {
+            let distance = other.position.distance(p);
+            distance * 0.5
+        }
     }
 }

@@ -7,16 +7,16 @@ use std::cmp::min;
 pub fn rotate(center: Vec2, angle: f64, distance: f64) -> Vec2 {
     center
         + Vec2 {
-            x: angle.cos() * distance,
-            y: angle.sin() * distance,
-        }
+        x: angle.cos() * distance,
+        y: angle.sin() * distance,
+    }
 }
 
-pub fn does_intersect_vec(v1: &Vec2, v2: &Vec2, obstacles: &Vec<Obstacle>) -> bool {
-    does_intersect(v1.x, v1.y, v2.x, v2.y, obstacles)
+pub fn intersects_with_obstacles_vec(v1: &Vec2, v2: &Vec2, obstacles: &Vec<Obstacle>) -> bool {
+    intersects_with_obstacles(v1.x, v1.y, v2.x, v2.y, obstacles)
 }
 
-pub fn does_intersect(x1: f64, y1: f64, x2: f64, y2: f64, obstacles: &Vec<Obstacle>) -> bool {
+pub fn intersects_with_obstacles(x1: f64, y1: f64, x2: f64, y2: f64, obstacles: &Vec<Obstacle>) -> bool {
     for obs in obstacles.iter().filter(|o| {
         let min_x = if x1 < x2 { x1 } else { x2 } - o.radius;
         let max_x = if x1 >= x2 { x1 } else { x2 } + o.radius;
@@ -35,6 +35,36 @@ pub fn does_intersect(x1: f64, y1: f64, x2: f64, y2: f64, obstacles: &Vec<Obstac
             / ((x2 - x1).powf(2.0) + (y2 - y1).powf(2.0)).sqrt();
 
         if dist < obs.radius && !obs.can_shoot_through {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn intersects_with_units_vec(v1: &Vec2, v2: &Vec2, units: &Vec<&Unit>) -> bool {
+    intersects_with_units(v1.x, v1.y, v2.x, v2.y, units)
+}
+
+pub fn intersects_with_units(x1: f64, y1: f64, x2: f64, y2: f64, units: &Vec<&Unit>) -> bool {
+    let unit_radius = get_constants().unit_radius;
+    for unit in units.iter().filter(|o| {
+        let min_x = if x1 < x2 { x1 } else { x2 } - unit_radius;
+        let max_x = if x1 >= x2 { x1 } else { x2 } + unit_radius;
+        let min_y = if y1 < y2 { y1 } else { y2 } - unit_radius;
+        let max_y = if y1 >= y2 { y1 } else { y2 } + unit_radius;
+
+        o.position.x >= min_x
+            && o.position.x <= max_x
+            && o.position.y >= min_y
+            && o.position.y <= max_y
+    }) {
+        let x0: f64 = unit.position.x;
+        let y0: f64 = unit.position.y;
+
+        let dist = ((x2 - x1) * (y1 - y0) - (x1 - x0) * (y2 - y1)).abs()
+            / ((x2 - x1).powf(2.0) + (y2 - y1).powf(2.0)).sqrt();
+
+        if dist < unit_radius {
             return true;
         }
     }

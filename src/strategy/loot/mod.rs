@@ -1,8 +1,9 @@
-use crate::model::{Item, Loot, Unit};
-use crate::strategy::holder::{get_constants, get_game, get_units};
+use crate::model::{Item, Loot, Unit, Vec2};
+use crate::strategy::holder::{get_constants, get_game, get_all_enemy_units, is_loot_booked};
 use itertools::Itertools;
 use libc::clone;
 use std::any::Any;
+use crate::strategy::behaviour::behaviour::{my_units_collision_score, my_units_magnet_score};
 
 pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<Loot> {
     let constants = get_constants();
@@ -10,9 +11,14 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
     let ammo = unit.ammo.clone();
     let score2loot = loots
         .iter()
+        .filter(|l| !is_loot_booked(&l.id))
         .filter(|l| is_inside_zone(l))
+        .filter(|l| match unit.my_closest_other_unit() {
+            None => { true }
+            Some(other) => other.position.distance(&l.position) < 30.0 || unit.position.distance(&l.position) < 10.0
+        })
         .filter(|l| {
-            get_units()
+            get_all_enemy_units()
                 .iter()
                 .find(|e| {
                     e.position.distance(&l.position) + get_constants().unit_radius
@@ -31,13 +37,13 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
             let score: i32 = match l.item {
                 Item::Weapon { type_index } => {
                     if current_weapon.is_none() {
-                        type_index * 100
+                        (type_index + 1) * 100
                     } else {
                         if ammo[type_index as usize] == 0 {
                             0
                         } else {
                             if current_weapon.unwrap() < type_index {
-                                type_index * 100
+                                (type_index + 1) * 100
                             } else {
                                 0
                             }
@@ -60,9 +66,9 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
                     if percent_of_max_ammo == 1.0 {
                         0
                     } else if percent_of_max_ammo == 0.0 {
-                        weapon_type_index * 75
+                        (weapon_type_index + 1) * 75
                     } else {
-                        (weapon_type_index as f64 * 75.0 / percent_of_max_ammo).ceil() as i32
+                        ((weapon_type_index + 1) as f64 * 75.0 / percent_of_max_ammo).ceil() as i32
                     }
                 }
             };
@@ -74,12 +80,18 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
     max.map(|(score, _)| {
         score2loot
             .iter()
-            .filter(|e| e.0 == score.clone())
+            .filter(|e| &e.0 == score)
             .map(|e| e.1)
-            .min_by_key(|e| e.position.distance(&unit.position).ceil() as i64)
+            .min_by(|a, b| {
+                fn score(p: &Vec2, unit: &Unit) -> f64 {
+                    p.distance(&unit.position)
+                        - my_units_magnet_score(&p, unit)
+                }
+                score(&a.position, unit).partial_cmp(&score(&b.position, unit)).unwrap()
+            })
             .map(|e| e.clone())
     })
-    .flatten()
+        .flatten()
 }
 
 fn is_inside_zone(loot: &Loot) -> bool {

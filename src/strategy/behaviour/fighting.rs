@@ -2,11 +2,9 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED, TRANSPARENT_BLUE};
 use crate::model::ActionOrder::Aim;
 use crate::model::{Obstacle, Unit, UnitOrder, Vec2};
-use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour};
-use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
-use crate::strategy::util::{
-    bullet_trace_score, does_intersect, does_intersect_vec, get_projectile_traces,
-};
+use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour, zone_penalty, my_units_magnet_score, my_units_collision_score};
+use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_enemy_units};
+use crate::strategy::util::{bullet_trace_score, intersects_with_obstacles, intersects_with_obstacles_vec, get_projectile_traces, intersects_with_units_vec};
 use itertools::{all, Itertools};
 use std::cmp::{max, min};
 
@@ -25,9 +23,9 @@ impl Behaviour for Fighting {
             return false;
         };
 
-        get_units()
+        get_all_enemy_units()
             .iter()
-            .filter(|e| simulation(unit, e, get_units().len() == 1))
+            .filter(|e| simulation(unit, e, get_all_enemy_units().len() == 1))
             .find(|e| {
                 e.position.distance(&unit.position) - get_constants().unit_radius
                     < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
@@ -42,9 +40,9 @@ impl Behaviour for Fighting {
         let constants = get_constants();
         let weapon = &constants.weapons[unit.weapon.unwrap_or(0) as usize];
         let traces = get_projectile_traces();
-        let target = get_units()
+        let target = get_all_enemy_units()
             .iter()
-            .filter(|e| simulation(unit, e, get_units().len() == 1))
+            .filter(|e| simulation(unit, e, get_all_enemy_units().len() == 1))
             .min_by_key(|e| e.position.distance(&unit.position) as i64)
             .unwrap();
 
@@ -55,9 +53,9 @@ impl Behaviour for Fighting {
         let obstacles = &get_obstacles(unit.id);
         let fire_target = target.position.clone()
             + (target.velocity.clone() * unit.position.distance(&target.position)
-                / weapon.projectile_speed);
+            / weapon.projectile_speed);
 
-        let intersects_with_obstacles = does_intersect(
+        let intersects_with_obstacles = intersects_with_obstacles(
             unit.position.x,
             unit.position.y,
             fire_target.x,
@@ -67,9 +65,9 @@ impl Behaviour for Fighting {
         let goal = get_best_firing_spot(unit, &target, obstacles);
 
         let result_move = unit
-            .points_around_unit()
+            .points_around_unit(true)
             .iter()
-            .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
+            .map(|p| (p, bullet_trace_score(&traces, &p) + my_units_collision_score(&p, unit) + p.distance(&goal)))
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
             .unwrap()
             .0
@@ -104,29 +102,25 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
     let mut best_score = f64::MIN;
     for p in unit.points_in_radius(10) {
         let (units_in_firing_distance, units_not_in_firing_distance): (Vec<_>, Vec<_>) =
-            get_units()
+            get_all_enemy_units()
                 .iter()
                 .filter(|e| e.id != target.id)
                 .partition(|e| {
                     e.position.distance(&p) - get_constants().unit_radius < e.firing_distance()
-                        || does_intersect_vec(&e.position, &p, obstacles)
+                        || intersects_with_obstacles_vec(&e.position, &p, obstacles)
                 });
-        let has_obstacles = does_intersect_vec(&unit.position, &p, obstacles);
+        let has_obstacles = intersects_with_obstacles_vec(&unit.position, &p, obstacles) ||
+            intersects_with_units_vec(&unit.position, &p, &unit.my_other_units());
+
         let distance_to_target = p.distance(&target.position);
         let distance_score = (distance_to_target - unit.firing_distance() * 0.5).abs();
-        let distance_to_zone_center = p.distance(&get_game().zone.current_center);
-        let zone_penalty_score = if distance_to_zone_center / &get_game().zone.current_radius > 0.95
-        {
-            distance_to_zone_center
-        } else {
-            0.0
-        };
 
         // more is better
         let score = units_not_in_firing_distance.len() as f64 * 2.0
             - units_in_firing_distance.len() as f64 * 2.0
+            - my_units_magnet_score(&p, unit)
             + if has_obstacles { -5.0 } else { 5.0 }
-            - zone_penalty_score
+            - zone_penalty(&p)
             - distance_score;
         if best_score < score {
             best_score = score;

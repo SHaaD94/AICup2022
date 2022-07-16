@@ -10,11 +10,20 @@ static mut NEAREST_OBSTACLES: Vec<(i32, Vec<Obstacle>)> = vec![];
 
 static mut LOOT_TO_TICK: Vec<(i32, Loot)> = vec![];
 static mut LOOT: Vec<Loot> = vec![];
+static mut BOOKED_LOOT: Vec<i32> = vec![];
 
 static mut UNIT_TO_TICK: Vec<(i32, Unit)> = vec![];
 static mut UNITS: Vec<Unit> = vec![];
 
 static mut PROJECTILES: Vec<Projectile> = vec![];
+
+pub fn book_loot(id: i32) {
+    unsafe { BOOKED_LOOT.push(id) }
+}
+
+pub fn is_loot_booked(id: &i32) -> bool {
+    unsafe { BOOKED_LOOT.contains(&id) }
+}
 
 pub fn get_constants() -> &'static Constants {
     unsafe { &CONSTANTS }
@@ -24,7 +33,7 @@ pub fn get_game() -> &'static Game {
     unsafe { &GAME }
 }
 
-pub fn get_units() -> &'static Vec<Unit> {
+pub fn get_all_enemy_units() -> &'static Vec<Unit> {
     unsafe { &UNITS }
 }
 
@@ -60,6 +69,7 @@ pub fn get_obstacles(unit_id: i32) -> Vec<Obstacle> {
 }
 
 pub fn update_game(game: Game, debug_interface: &mut Option<&mut DebugInterface>) {
+    unsafe { BOOKED_LOOT.clear() }
     let constants = get_constants();
 
     set_nearest_obstacles(&game, constants);
@@ -115,7 +125,7 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
     }
 
     unsafe { UNIT_TO_TICK = units_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { UNITS = units_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
+    unsafe { UNITS = units_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
 }
 
 fn update_loot(game: &Game) {
@@ -132,7 +142,7 @@ fn update_loot(game: &Game) {
         }
     }
     unsafe { LOOT_TO_TICK = loot_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
+    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
 }
 
 fn update_projectiles(game: &Game) {
@@ -148,7 +158,7 @@ fn update_projectiles(game: &Game) {
                 None => continue,
                 Some(pos) => pos,
             };
-            let intersects_with_units = get_units()
+            let intersects_with_units = get_all_enemy_units()
                 .iter()
                 .find(|e| e.position.distance(&new_pos) < get_constants().unit_radius)
                 .is_some();

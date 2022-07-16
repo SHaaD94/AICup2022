@@ -3,8 +3,8 @@ use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE};
 use crate::model::ActionOrder::UseShieldPotion;
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour};
-use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
-use crate::strategy::util::{bullet_trace_score, does_intersect, get_projectile_traces, rotate};
+use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_enemy_units};
+use crate::strategy::util::{bullet_trace_score, intersects_with_obstacles, get_projectile_traces, rotate};
 use std::env::set_current_dir;
 
 pub struct RunAndHeal {}
@@ -43,7 +43,7 @@ impl Behaviour for RunAndHeal {
             if let Some(debug) = debug_interface.as_mut() {
                 debug.add_circle(p.clone(), 0.1, RED.clone());
             }
-            let enemy_score = get_units()
+            let enemy_score = get_all_enemy_units()
                 .iter()
                 .map(|e| e.position.distance(&p))
                 .min_by_key(|s| s.ceil() as i64)
@@ -61,7 +61,7 @@ impl Behaviour for RunAndHeal {
         }
 
         let result_move = unit
-            .points_around_unit()
+            .points_around_unit(true)
             .iter()
             .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
