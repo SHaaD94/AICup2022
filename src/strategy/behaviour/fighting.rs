@@ -1,12 +1,15 @@
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED, TRANSPARENT_BLUE};
 use crate::model::ActionOrder::Aim;
-use crate::model::{Obstacle, Unit, UnitOrder, Vec2};
+use crate::model::{Obstacle, Unit, UnitOrder, Vec2, WeaponProperties};
 use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour, zone_penalty, my_units_magnet_score, my_units_collision_score};
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_enemy_units};
 use crate::strategy::util::{bullet_trace_score, intersects_with_obstacles, intersects_with_obstacles_vec, get_projectile_traces, intersects_with_units_vec};
 use itertools::{all, Itertools};
 use std::cmp::{max, min};
+use std::fmt;
+use std::fmt::{Formatter, Pointer};
+use std::path::Display;
 
 pub struct Fighting {}
 
@@ -25,7 +28,7 @@ impl Behaviour for Fighting {
 
         get_all_enemy_units()
             .iter()
-            .filter(|e| simulation(unit, e, get_all_enemy_units().len() == 1))
+            .filter(|e| can_win(&Vec::from([unit]), &Vec::from([*e]), get_all_enemy_units().len() == 1))
             .find(|e| {
                 e.position.distance(&unit.position) - get_constants().unit_radius
                     < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
@@ -42,7 +45,7 @@ impl Behaviour for Fighting {
         let traces = get_projectile_traces();
         let target = get_all_enemy_units()
             .iter()
-            .filter(|e| simulation(unit, e, get_all_enemy_units().len() == 1))
+            .filter(|e| can_win(&Vec::from([unit]), &Vec::from([*e]), get_all_enemy_units().len() == 1))
             .min_by_key(|e| e.position.distance(&unit.position) as i64)
             .unwrap();
 
@@ -140,52 +143,80 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
     best_point
 }
 
-pub fn simulation(u1: &Unit, u2: &Unit, allow_draw: bool) -> bool {
-    if u1.weapon.is_none() {
+struct FightProps {
+    weapon: WeaponProperties,
+    ammo: i32,
+    aim: f64,
+    health: f64,
+    fire_tick: i32,
+}
+
+impl fmt::Display for FightProps {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "tick {}, rate {}, ammo {}, health {}", self.fire_tick, self.weapon.get_fire_rate_in_ticks(), self.ammo, self.health)
+    }
+}
+
+pub fn can_win(u1: &Vec<&Unit>, u2: &Vec<&Unit>, allow_draw: bool) -> bool {
+    fn fighter_props(team: &Vec<&Unit>) -> Vec<FightProps> {
+        team.iter()
+            .filter(|e| e.weapon.is_some())
+            .filter(|e| e.ammo[e.weapon.unwrap() as usize] != 0)
+            .map(|e| FightProps {
+                weapon: get_constants().weapons[e.weapon.unwrap() as usize].clone(),
+                aim: e.aim,
+                ammo: e.ammo[e.weapon.unwrap() as usize],
+                health: e.health + e.shield,
+                fire_tick: -(max(get_game().current_tick, e.next_shot_tick) - get_game().current_tick),
+            })
+            .collect_vec()
+    }
+    let mut allies = fighter_props(u1);
+    if allies.is_empty() {
         return false;
     }
-    if u2.weapon.is_none() {
+    let mut enemies = fighter_props(u2);
+    if enemies.is_empty() {
         return true;
     }
-    let constants = get_constants();
-    let mut ammo1 = u1.ammo[u1.weapon.unwrap() as usize];
-    let w1 = &constants.weapons[u1.weapon.unwrap() as usize];
-    let mut h1 = u1.health + u1.shield;
-    let mut ammo2 = u2.ammo[u2.weapon.unwrap() as usize];
-    let w2 = &constants.weapons[u2.weapon.unwrap() as usize];
-    let mut h2 = u2.health + u2.shield;
-
-    let mut tick1 = -(max(get_game().current_tick, u1.next_shot_tick) - get_game().current_tick);
-    let mut tick2 = -(max(get_game().current_tick, u2.next_shot_tick) - get_game().current_tick);
-    tick1 += ((u1.aim - 1.0) * (w1.aim_time) * constants.ticks_per_second).ceil() as i32;
-    tick2 += ((u2.aim - 1.0) * (w2.aim_time) * constants.ticks_per_second).ceil() as i32;
 
     // println!("START!");
-    while h1 >= 0.0 && h2 >= 0.0 {
-        // println!("h1 {}, h2 {}, tick1 {}, tick2 {}, rate1 {}, rate2 {}, ammo1 {}, ammo2 {}",
-        //          h1, h2, tick1, tick2, w1.get_fire_rate_in_ticks(), w2.get_fire_rate_in_ticks(), ammo1, ammo2);
-        if ammo1 == 0 {
-            h1 = 0.0;
-            break;
+    while !allies.is_empty() && !enemies.is_empty() {
+        // println!("{}, enemies {}",
+        //          allies.iter().map(|e| e.to_string()).join(","),
+        //          enemies.iter().map(|e| e.to_string()).join(","));
+        let min_fire_rate =
+            allies.iter().map(|e| e.weapon.get_fire_rate_in_ticks()).chain(enemies.iter().map(|e| e.weapon.get_fire_rate_in_ticks()))
+                .min().unwrap();
+        fn process_tick(fire_rate: i32, cur_team: &mut Vec<FightProps>, other_team: &mut Vec<FightProps>) {
+            for mut ally in cur_team {
+                ally.fire_tick += fire_rate;
+                if ally.fire_tick >= ally.weapon.get_fire_rate_in_ticks() {
+                    ally.fire_tick -= ally.weapon.get_fire_rate_in_ticks();
+                    for mut enemy in &mut *other_team {
+                        if enemy.health > 0.0 {
+                            enemy.health -= ally.weapon.projectile_damage;
+                            break;
+                        }
+                    }
+                    ally.ammo -= 1
+                }
+            }
         }
-        if ammo2 == 0 {
-            h2 = 0.0;
-            break;
+        process_tick(min_fire_rate, &mut allies, &mut enemies);
+        process_tick(min_fire_rate, &mut enemies, &mut allies);
+
+        for i in (0..allies.len()).rev() {
+            if allies[i].ammo == 0 || allies[i].health <= 0.0 {
+                allies.remove(i);
+            }
         }
-        let min = min(w1.get_fire_rate_in_ticks(), w2.get_fire_rate_in_ticks());
-        tick1 += min;
-        tick2 += min;
-        if tick1 >= w1.get_fire_rate_in_ticks() {
-            tick1 -= w1.get_fire_rate_in_ticks();
-            h2 -= w1.projectile_damage;
-            ammo1 -= 1;
-        }
-        if tick2 >= w2.get_fire_rate_in_ticks() {
-            tick2 -= w2.get_fire_rate_in_ticks();
-            h1 -= w2.projectile_damage;
-            ammo2 -= 1;
+        for i in (0..enemies.len()).rev() {
+            if enemies[i].ammo == 0 || enemies[i].health <= 0.0 {
+                enemies.remove(i);
+            }
         }
     }
     // println!("END!");
-    return (h1 > 0.0 || allow_draw) && h2 <= 0.0;
+    return (!allies.is_empty() || allow_draw) && enemies.is_empty();
 }
