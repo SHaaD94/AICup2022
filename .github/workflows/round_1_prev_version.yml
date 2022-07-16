@@ -31,4 +31,5 @@ jobs:
       - name: Rrun game
         run: |
           cd runner
+          tar -xzf runner.gz
           python3 game_runner.py round_1_prev_version 10 60

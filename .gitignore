@@ -1,3 +1,6 @@
 .idea/
 code-royale.iml
 target/
+runner/assets
+runner/presets
+runner/aicup22
