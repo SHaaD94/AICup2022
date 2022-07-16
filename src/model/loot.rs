@@ -22,10 +22,6 @@ impl trans::Trans for Loot {
         let id: i32 = trans::Trans::read_from(reader)?;
         let position: model::Vec2 = trans::Trans::read_from(reader)?;
         let item: model::Item = trans::Trans::read_from(reader)?;
-        Ok(Self {
-            id,
-            position,
-            item,
-        })
+        Ok(Self { id, position, item })
     }
 }

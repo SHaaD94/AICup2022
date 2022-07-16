@@ -24,7 +24,8 @@ impl trans::Trans for ActionType {
             1 => Ok(Self::UseShieldPotion),
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Unexpected tag {:?}", tag))),
+                format!("Unexpected tag {:?}", tag),
+            )),
         }
     }
 }

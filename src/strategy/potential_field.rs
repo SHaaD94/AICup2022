@@ -13,12 +13,11 @@ pub struct PotentialField {
 
 impl PotentialField {
     pub const fn new() -> Self {
-        PotentialField {
-            nodes: Vec::new()
-        }
+        PotentialField { nodes: Vec::new() }
     }
     pub fn find_best(&self) -> Option<PotentialFieldNode> {
-        self.nodes.iter()
+        self.nodes
+            .iter()
             .max_by_key(|e| e.score.ceil() as i64)
             .map(|e| e.clone())
     }

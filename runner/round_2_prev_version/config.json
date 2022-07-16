@@ -1,0 +1,86 @@
+{
+  "seed": null,
+  "game": {
+    "Create": "Round2"
+  },
+  "players": [
+    {
+      "Tcp": {
+        "port": 31001,
+        "accept_timeout": 10,
+        "single_timeout": 1,
+        "total_time_limit": null,
+        "run": {
+          "run_command": [
+            "../target/release/ai-cup-22"
+          ]
+        }
+      }
+    },
+    {
+      "Tcp": {
+        "port": 31002,
+        "accept_timeout": 10,
+        "single_timeout": 1,
+        "total_time_limit": null,
+        "run": {
+          "run_command": [
+            "prev_version"
+          ]
+        }
+      }
+    },
+    {
+      "Tcp": {
+        "port": 31003,
+        "accept_timeout": 10,
+        "single_timeout": 1,
+        "total_time_limit": null,
+        "run": {
+          "run_command": [
+            "prev_version"
+          ]
+        }
+      }
+    },
+    {
+      "Tcp": {
+        "port": 31004,
+        "accept_timeout": 10,
+        "single_timeout": 1,
+        "total_time_limit": null,
+        "run": {
+          "run_command": [
+            "prev_version"
+          ]
+        }
+      }
+    },
+    {
+      "Tcp": {
+        "port": 31005,
+        "accept_timeout": 10,
+        "single_timeout": 1,
+        "total_time_limit": null,
+        "run": {
+          "run_command": [
+            "prev_version"
+          ]
+        }
+      }
+    },
+    {
+      "Tcp": {
+        "port": 31006,
+        "accept_timeout": 10,
+        "single_timeout": 1,
+        "total_time_limit": null,
+        "run": {
+          "run_command": [
+            "prev_version"
+          ]
+        }
+      }
+    }
+  ]
+}

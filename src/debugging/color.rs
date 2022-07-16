@@ -13,13 +13,48 @@ pub struct Color {
     pub a: f64,
 }
 
-pub static RED: Color = Color { r: 255.0, g: 0.0, b: 0.0, a: 1.0 };
-pub static YELLOW: Color = Color { r: 255.0, g: 165.0, b: 0.0, a: 1.0 };
-pub static GREEN: Color = Color { r: 0.0, g: 255.0, b: 0.0, a: 1.0 };
-pub static TRANSPARENT_GREEN: Color = Color { r: 0.0, g: 255.0, b: 0.0, a: 0.3 };
-pub static BLUE: Color = Color { r: 0.0, g: 0.0, b: 255.0, a: 1.0 };
-pub static TRANSPARENT_BLUE: Color = Color { r: 0.0, g: 0.0, b: 255.0, a: 0.3 };
-pub static TEAL: Color = Color { r: 0.0, g: 255.0, b: 255.0, a: 1.0 };
+pub static RED: Color = Color {
+    r: 255.0,
+    g: 0.0,
+    b: 0.0,
+    a: 1.0,
+};
+pub static YELLOW: Color = Color {
+    r: 255.0,
+    g: 165.0,
+    b: 0.0,
+    a: 1.0,
+};
+pub static GREEN: Color = Color {
+    r: 0.0,
+    g: 255.0,
+    b: 0.0,
+    a: 1.0,
+};
+pub static TRANSPARENT_GREEN: Color = Color {
+    r: 0.0,
+    g: 255.0,
+    b: 0.0,
+    a: 0.3,
+};
+pub static BLUE: Color = Color {
+    r: 0.0,
+    g: 0.0,
+    b: 255.0,
+    a: 1.0,
+};
+pub static TRANSPARENT_BLUE: Color = Color {
+    r: 0.0,
+    g: 0.0,
+    b: 255.0,
+    a: 0.3,
+};
+pub static TEAL: Color = Color {
+    r: 0.0,
+    g: 255.0,
+    b: 255.0,
+    a: 1.0,
+};
 
 impl trans::Trans for Color {
     fn write_to(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
@@ -34,11 +69,6 @@ impl trans::Trans for Color {
         let g: f64 = trans::Trans::read_from(reader)?;
         let b: f64 = trans::Trans::read_from(reader)?;
         let a: f64 = trans::Trans::read_from(reader)?;
-        Ok(Self {
-            r,
-            g,
-            b,
-            a,
-        })
+        Ok(Self { r, g, b, a })
     }
 }

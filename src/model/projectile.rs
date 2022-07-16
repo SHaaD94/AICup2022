@@ -1,5 +1,5 @@
-use crate::strategy::holder::get_constants;
 use super::*;
+use crate::strategy::holder::get_constants;
 
 /// Weapon projectile
 #[derive(Clone, Debug)]
@@ -25,8 +25,13 @@ impl Projectile {
         self.life_time * get_constants().ticks_per_second
     }
     pub fn position_after_ticks(&self, ticks: i32) -> Option<Vec2> {
-        if self.life_time_in_ticks() - ticks as f64 <= 0 as f64 { return None; }
-        Some(self.position.clone() + (self.velocity.clone() / get_constants().ticks_per_second * (ticks as f64)))
+        if self.life_time_in_ticks() - ticks as f64 <= 0 as f64 {
+            return None;
+        }
+        Some(
+            self.position.clone()
+                + (self.velocity.clone() / get_constants().ticks_per_second * (ticks as f64)),
+        )
     }
 }
 

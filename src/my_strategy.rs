@@ -1,16 +1,19 @@
+use crate::debug_interface::DebugInterface;
+use ai_cup_22::debugging::{Color, BLUE, GREEN, RED, TEAL, TRANSPARENT_GREEN, YELLOW};
+use ai_cup_22::model::ActionOrder::Aim;
+use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
+use ai_cup_22::strategy::get_order;
+use ai_cup_22::strategy::holder::{
+    get_constants, get_game, get_loot, get_obstacles, get_projectiles, get_units, set_constants,
+    update_game,
+};
+use ai_cup_22::strategy::util::get_projectile_traces;
+use ai_cup_22::*;
+use itertools::Itertools;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::sync::atomic::AtomicPtr;
 use std::time::{SystemTime, UNIX_EPOCH};
-use itertools::Itertools;
-use crate::debug_interface::DebugInterface;
-use ai_cup_22::*;
-use ai_cup_22::debugging::{BLUE, Color, GREEN, YELLOW, RED, TEAL, TRANSPARENT_GREEN};
-use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
-use ai_cup_22::model::ActionOrder::Aim;
-use ai_cup_22::strategy::get_order;
-use ai_cup_22::strategy::holder::{get_constants, get_game, get_loot, get_obstacles, get_projectiles, get_units, set_constants, update_game};
-use ai_cup_22::strategy::util::get_projectile_traces;
 
 pub struct MyStrategy {}
 
@@ -50,8 +53,13 @@ impl MyStrategy {
         for u in get_game().my_units() {
             let (left_angle, right_angle) = u.view_segment_angles();
 
-            debug.add_pie(u.position.clone(), get_constants().view_distance,
-                          left_angle, right_angle, TRANSPARENT_GREEN.clone());
+            debug.add_pie(
+                u.position.clone(),
+                get_constants().view_distance,
+                left_angle,
+                right_angle,
+                TRANSPARENT_GREEN.clone(),
+            );
         }
     }
     fn draw_projectile_traces(debug: &mut DebugInterface) {
@@ -90,20 +98,24 @@ impl MyStrategy {
 
     fn draw_sounds(debug: &mut DebugInterface) {
         for x in &get_game().sounds {
-            debug.add_circle(x.position.clone(), 0.5 * ((x.type_index + 1) as f64), YELLOW.clone())
+            debug.add_circle(
+                x.position.clone(),
+                0.5 * ((x.type_index + 1) as f64),
+                YELLOW.clone(),
+            )
         }
     }
 
     fn draw_units(debug: &mut DebugInterface) {
         for x in get_units() {
-            debug.add_circle(x.position.clone(), get_constants().unit_radius, BLUE.clone())
+            debug.add_circle(
+                x.position.clone(),
+                get_constants().unit_radius,
+                BLUE.clone(),
+            )
         }
     }
 
-    pub fn debug_update(
-        &mut self,
-        displayed_tick: i32,
-        debug_interface: &mut DebugInterface,
-    ) {}
+    pub fn debug_update(&mut self, displayed_tick: i32, debug_interface: &mut DebugInterface) {}
     pub fn finish(&mut self) {}
 }

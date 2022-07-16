@@ -18,9 +18,6 @@ impl trans::Trans for ColoredVertex {
     fn read_from(reader: &mut dyn std::io::Read) -> std::io::Result<Self> {
         let position: model::Vec2 = trans::Trans::read_from(reader)?;
         let color: debugging::Color = trans::Trans::read_from(reader)?;
-        Ok(Self {
-            position,
-            color,
-        })
+        Ok(Self { position, color })
     }
 }

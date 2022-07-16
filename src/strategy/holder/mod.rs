@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use itertools::Itertools;
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED};
 use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit, Vec2};
+use itertools::Itertools;
+use std::collections::HashMap;
 
 static mut GAME: Game = Game::const_default();
 static mut CONSTANTS: Constants = Constants::const_default();
@@ -16,13 +16,21 @@ static mut UNITS: Vec<Unit> = vec![];
 
 static mut PROJECTILES: Vec<Projectile> = vec![];
 
-pub fn get_constants() -> &'static Constants { unsafe { &CONSTANTS } }
+pub fn get_constants() -> &'static Constants {
+    unsafe { &CONSTANTS }
+}
 
-pub fn get_game() -> &'static Game { unsafe { &GAME } }
+pub fn get_game() -> &'static Game {
+    unsafe { &GAME }
+}
 
-pub fn get_units() -> &'static Vec<Unit> { unsafe { &UNITS } }
+pub fn get_units() -> &'static Vec<Unit> {
+    unsafe { &UNITS }
+}
 
-pub fn get_loot() -> &'static Vec<Loot> { unsafe { &LOOT } }
+pub fn get_loot() -> &'static Vec<Loot> {
+    unsafe { &LOOT }
+}
 
 pub unsafe fn remove_loot(id_to_remove: i32) {
     let mut res = Vec::new();
@@ -35,13 +43,20 @@ pub unsafe fn remove_loot(id_to_remove: i32) {
     unsafe { LOOT = LOOT_TO_TICK.iter().map(|e| e.1.clone()).collect_vec() };
 }
 
-pub fn get_projectiles() -> &'static Vec<Projectile> { unsafe { &PROJECTILES } }
+pub fn get_projectiles() -> &'static Vec<Projectile> {
+    unsafe { &PROJECTILES }
+}
 
-pub fn set_constants(constants: Constants) { unsafe { CONSTANTS = constants } }
+pub fn set_constants(constants: Constants) {
+    unsafe { CONSTANTS = constants }
+}
 
 pub fn get_obstacles(unit_id: i32) -> Vec<Obstacle> {
-    unsafe { &NEAREST_OBSTACLES }.iter().find(|(id, _)| id == &unit_id)
-        .map(|(_, obstacles)| obstacles.clone()).unwrap_or(Vec::new())
+    unsafe { &NEAREST_OBSTACLES }
+        .iter()
+        .find(|(id, _)| id == &unit_id)
+        .map(|(_, obstacles)| obstacles.clone())
+        .unwrap_or(Vec::new())
 }
 
 pub fn update_game(game: Game, debug_interface: &mut Option<&mut DebugInterface>) {
@@ -79,8 +94,8 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
 
         if projectile.shooter_player_id != game.my_id
             && !units_hashmap.contains_key(&projectile.shooter_id)
-            && !inside_vision(game, &unit_pos) {
-
+            && !inside_vision(game, &unit_pos)
+        {
             // if let Some(d) = debug_interface.as_mut() {
             //     d.add_circle(unit_pos.clone(), 15.0, RED.clone());
             //     d.add_circle(projectile.position.clone(), 5.0, BLUE.clone());
@@ -100,7 +115,7 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
     }
 
     unsafe { UNIT_TO_TICK = units_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { UNITS = units_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
+    unsafe { UNITS = units_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
 }
 
 fn update_loot(game: &Game) {
@@ -117,7 +132,7 @@ fn update_loot(game: &Game) {
         }
     }
     unsafe { LOOT_TO_TICK = loot_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
+    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
 }
 
 fn update_projectiles(game: &Game) {
@@ -131,25 +146,38 @@ fn update_projectiles(game: &Game) {
             let life_time_after = (x.life_time_in_ticks() - 1.0) / ticks_per_second;
             let new_pos = match x.position_after_ticks(1) {
                 None => continue,
-                Some(pos) => pos
+                Some(pos) => pos,
             };
-            let intersects_with_units = get_units().iter()
-                .find(|e| e.position.distance(&new_pos) < get_constants().unit_radius).is_some();
-            let intersects_with_obstacles = game.my_units().iter().map(|u| get_obstacles(u.id)).flatten()
+            let intersects_with_units = get_units()
+                .iter()
+                .find(|e| e.position.distance(&new_pos) < get_constants().unit_radius)
+                .is_some();
+            let intersects_with_obstacles = game
+                .my_units()
+                .iter()
+                .map(|u| get_obstacles(u.id))
+                .flatten()
                 .filter(|e| !e.can_shoot_through)
-                .find(|o| o.position.distance(&new_pos) < o.radius).is_some();
+                .find(|o| o.position.distance(&new_pos) < o.radius)
+                .is_some();
 
-            if life_time_after > 0.0 && !intersects_with_units && !intersects_with_obstacles
-                && !inside_vision(game, &x.position) {
-                projectiles_map.insert(x.id, Projectile {
-                    life_time: life_time_after,
-                    id: x.id,
-                    weapon_type_index: x.weapon_type_index,
-                    shooter_id: x.shooter_id,
-                    shooter_player_id: x.shooter_player_id,
-                    position: new_pos,
-                    velocity: x.velocity.clone(),
-                });
+            if life_time_after > 0.0
+                && !intersects_with_units
+                && !intersects_with_obstacles
+                && !inside_vision(game, &x.position)
+            {
+                projectiles_map.insert(
+                    x.id,
+                    Projectile {
+                        life_time: life_time_after,
+                        id: x.id,
+                        weapon_type_index: x.weapon_type_index,
+                        shooter_id: x.shooter_id,
+                        shooter_player_id: x.shooter_player_id,
+                        position: new_pos,
+                        velocity: x.velocity.clone(),
+                    },
+                );
             }
         }
     }
@@ -157,21 +185,36 @@ fn update_projectiles(game: &Game) {
 }
 
 fn inside_vision(game: &Game, x: &Vec2) -> bool {
-    game.my_units().iter()
+    game.my_units()
+        .iter()
         .filter(|e| e.position.distance(x) <= get_constants().view_distance)
         .find(|u| {
             let (left_angle, right_angle) = u.view_segment_angles();
             let angle = (x.clone() - u.position.clone()).angle();
-            (left_angle >= angle && right_angle <= angle) || (left_angle <= angle && right_angle >= angle)
-        }).is_some()
+            (left_angle >= angle && right_angle <= angle)
+                || (left_angle <= angle && right_angle >= angle)
+        })
+        .is_some()
 }
 
 fn set_nearest_obstacles(game: &Game, constants: &Constants) {
-    unsafe { NEAREST_OBSTACLES.clear(); }
-    game.my_units().iter().map(|u|
-        (u.id.clone(), constants.obstacles.iter()
-            .filter(|o| o.position.distance(&u.position) < constants.view_distance + o.radius)
-            .map(|o| o.clone()).collect_vec())
-    ).for_each(|x| unsafe { NEAREST_OBSTACLES.push(x) });
+    unsafe {
+        NEAREST_OBSTACLES.clear();
+    }
+    game.my_units()
+        .iter()
+        .map(|u| {
+            (
+                u.id.clone(),
+                constants
+                    .obstacles
+                    .iter()
+                    .filter(|o| {
+                        o.position.distance(&u.position) < constants.view_distance + o.radius
+                    })
+                    .map(|o| o.clone())
+                    .collect_vec(),
+            )
+        })
+        .for_each(|x| unsafe { NEAREST_OBSTACLES.push(x) });
 }
-

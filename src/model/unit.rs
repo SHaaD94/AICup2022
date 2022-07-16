@@ -1,7 +1,7 @@
-use std::f64::consts::PI;
+use super::*;
 use crate::strategy::holder::{get_constants, get_obstacles};
 use crate::strategy::util::rotate;
-use super::*;
+use std::f64::consts::PI;
 
 /// A unit
 #[derive(Clone, Debug)]
@@ -63,24 +63,32 @@ impl Unit {
     }
 
     pub fn is_inside_vision(&self, p: &Vec2) -> bool {
-        if self.position.distance(p) > get_constants().view_distance { return false; };
+        if self.position.distance(p) > get_constants().view_distance {
+            return false;
+        };
         let (left_angle, right_angle) = self.view_segment_angles();
         let angle = (p.clone() - self.position.clone()).angle();
-        (left_angle >= angle && right_angle <= angle) || (left_angle <= angle && right_angle >= angle)
+        (left_angle >= angle && right_angle <= angle)
+            || (left_angle <= angle && right_angle >= angle)
     }
 
     pub fn firing_distance(&self) -> f64 {
         match self.weapon {
-            None => { 0.0 }
-            Some(w) => { get_constants().weapons[w as usize].firing_distance() }
+            None => 0.0,
+            Some(w) => get_constants().weapons[w as usize].firing_distance(),
         }
     }
     pub fn points_in_radius(&self, radius: i32) -> Vec<Vec2> {
         let mut res = Vec::new();
         for x in 0..(radius * 2 + 1) {
             for y in 0..(radius * 2 + 1) {
-                let p = Vec2 { x: self.position.x + x as f64 - radius as f64, y: self.position.y + y as f64 - radius as f64 };
-                if self.position.distance(&p) > radius as f64 { continue; }
+                let p = Vec2 {
+                    x: self.position.x + x as f64 - radius as f64,
+                    y: self.position.y + y as f64 - radius as f64,
+                };
+                if self.position.distance(&p) > radius as f64 {
+                    continue;
+                }
                 res.push(p);
             }
         }
@@ -90,8 +98,12 @@ impl Unit {
         let points_around = 10;
         let constants = get_constants();
 
-        let forward_point = self.position.clone() + (self.direction.clone() * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
-        let backward_point = self.position.clone() - (self.direction.clone() * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
+        let forward_point = self.position.clone()
+            + (self.direction.clone()
+                * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
+        let backward_point = self.position.clone()
+            - (self.direction.clone()
+                * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
         let center = (forward_point.clone() + backward_point) / 2.0;
         let radius = forward_point.distance(&center);
 
@@ -102,8 +114,12 @@ impl Unit {
         for _ in 0..points_around {
             let next_vec = rotate(center.clone(), cur_angle, radius);
             let next_vec_after_some_ticks = rotate(center.clone(), cur_angle, radius * 5.0);
-            let intersects_with_obstacles = obstacles.iter()
-                .find(|o| o.position.distance(&next_vec_after_some_ticks) < o.radius + get_constants().unit_radius)
+            let intersects_with_obstacles = obstacles
+                .iter()
+                .find(|o| {
+                    o.position.distance(&next_vec_after_some_ticks)
+                        < o.radius + get_constants().unit_radius
+                })
                 .is_some();
             if !intersects_with_obstacles {
                 res.push(next_vec);
@@ -116,9 +132,16 @@ impl Unit {
 
     pub fn view_segment_angles(&self) -> (f64, f64) {
         let default_view = get_constants().field_of_view;
-        let view_angle = self.weapon.map(|e|
-            default_view - (default_view - get_constants().weapons[e as usize].aim_field_of_view) * self.aim)
-            .unwrap_or(default_view) * PI / 180.0;
+        let view_angle = self
+            .weapon
+            .map(|e| {
+                default_view
+                    - (default_view - get_constants().weapons[e as usize].aim_field_of_view)
+                        * self.aim
+            })
+            .unwrap_or(default_view)
+            * PI
+            / 180.0;
 
         let left_angle = self.direction.angle() - view_angle / 2.0;
         let right_angle = self.direction.angle() + view_angle / 2.0;
@@ -131,11 +154,13 @@ impl Unit {
         let first = rotate(
             self.position.clone(),
             left_angle,
-            get_constants().view_distance);
+            get_constants().view_distance,
+        );
         let second = rotate(
             self.position.clone(),
             right_angle,
-            get_constants().view_distance);
+            get_constants().view_distance,
+        );
         (first, second)
     }
 }

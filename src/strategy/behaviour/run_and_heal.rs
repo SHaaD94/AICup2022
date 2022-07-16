@@ -1,11 +1,11 @@
-use std::env::set_current_dir;
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE};
-use crate::model::{Unit, UnitOrder, Vec2};
 use crate::model::ActionOrder::UseShieldPotion;
-use crate::strategy::behaviour::behaviour::{Behaviour, write_behaviour};
+use crate::model::{Unit, UnitOrder, Vec2};
+use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour};
 use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
 use crate::strategy::util::{bullet_trace_score, does_intersect, get_projectile_traces, rotate};
+use std::env::set_current_dir;
 
 pub struct RunAndHeal {}
 
@@ -18,7 +18,8 @@ impl Behaviour for RunAndHeal {
         //     })
         //     .find(|e| !simulation(unit, e)).is_some() { return true; };
 
-        unit.health < get_constants().unit_health * 0.5 || unit.shield < get_constants().max_shield && unit.shield_potions > 0
+        unit.health < get_constants().unit_health * 0.5
+            || unit.shield < get_constants().max_shield && unit.shield_potions > 0
     }
 
     fn order(&self, unit: &Unit, debug_interface: &mut Option<&mut DebugInterface>) -> UnitOrder {
@@ -29,7 +30,11 @@ impl Behaviour for RunAndHeal {
         let obstacles = get_obstacles(unit.id);
         let traces = get_projectile_traces();
         for p in unit.points_in_radius(10) {
-            if obstacles.iter().find(|o| o.position.distance(&p) < o.radius + get_constants().unit_radius).is_some() {
+            if obstacles
+                .iter()
+                .find(|o| o.position.distance(&p) < o.radius + get_constants().unit_radius)
+                .is_some()
+            {
                 continue;
             }
             if get_game().zone.current_center.distance(&p) + 3.0 >= get_game().zone.current_radius {
@@ -38,31 +43,37 @@ impl Behaviour for RunAndHeal {
             if let Some(debug) = debug_interface.as_mut() {
                 debug.add_circle(p.clone(), 0.1, RED.clone());
             }
-            let enemy_score = get_units().iter().map(|e| {
-                e.position.distance(&p)
-            }).min_by_key(|s| s.ceil() as i64).unwrap_or(0.0);
-            let distance_from_previous_score =
-                if p.distance(&unit.position) > 3.0 {
-                    3.0
-                } else {
-                    p.distance(&unit.position)
-                };
-            let res = -enemy_score
-                - distance_from_previous_score;
+            let enemy_score = get_units()
+                .iter()
+                .map(|e| e.position.distance(&p))
+                .min_by_key(|s| s.ceil() as i64)
+                .unwrap_or(0.0);
+            let distance_from_previous_score = if p.distance(&unit.position) > 3.0 {
+                3.0
+            } else {
+                p.distance(&unit.position)
+            };
+            let res = -enemy_score - distance_from_previous_score;
             if res < top_score {
                 goal = p;
                 top_score = res;
             }
         }
 
-        let result_move = unit.points_around_unit().iter()
+        let result_move = unit
+            .points_around_unit()
+            .iter()
             .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
-            .min_by(|e1, e2| {
-                f64::partial_cmp(&e1.1, &e2.1).unwrap()
-            }).unwrap().0.clone();
+            .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
+            .unwrap()
+            .0
+            .clone();
 
         let rotation = if get_game().current_tick % 100 >= 85 {
-            Vec2 { x: -unit.direction.y, y: unit.direction.x }
+            Vec2 {
+                x: -unit.direction.y,
+                y: unit.direction.x,
+            }
         } else {
             goal.clone() - unit.position.clone()
         };
