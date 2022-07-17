@@ -193,7 +193,7 @@ pub fn simulation(u1: &Vec<&Unit>, u2: &Vec<&Unit>) -> FightSimResult {
                 enemies.remove(i);
             }
         }
-        if any_with_ammo {
+        if !any_with_ammo {
             return DRAW;
         };
     }

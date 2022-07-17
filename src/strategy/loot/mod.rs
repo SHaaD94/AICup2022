@@ -93,7 +93,7 @@ fn is_inside_zone(loot: &Loot) -> bool {
 fn is_loot_needed(l: &Loot, unit: &Unit) -> bool {
     let constants = get_constants();
     let current_weapon = unit.weapon;
-    let ammo = unit.ammo.clone();
+    let ammo = &unit.ammo;
 
     match l.item {
         Item::Weapon { type_index } => {
