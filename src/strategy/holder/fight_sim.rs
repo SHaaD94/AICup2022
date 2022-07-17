@@ -41,7 +41,7 @@ pub fn create_fight_simulations(debug_interface: &mut Option<&mut DebugInterface
             a.push(unit);
             a
         }).unique_by(|a| a.iter().map(|e| e.id.to_string()).sorted().join(",")).collect_vec();
-    println!("{}", my_groups.iter().map(|e| e.len().to_string()).join(", "));
+    // println!("calculating sim for groups: {}", my_groups.iter().map(|e| e.len().to_string()).join(", "));
 
     let enemy_groups = find_enemy_groups();
 

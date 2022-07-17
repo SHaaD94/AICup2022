@@ -30,11 +30,13 @@ impl Behaviour for Fighting {
 
         let fight_sims = get_fight_simulations();
         fight_sims.into_iter()
-            .find(|s| s.allies.contains(&unit.id) && match s.result {
+            .filter(|s| s.allies.contains(&unit.id) && match s.result {
                 FightSimResult::WON(_) => { true }
                 FightSimResult::DRAW => true,
                 FightSimResult::LOST => false,
             })
+            .flat_map(|e| e.enemy_units())
+            .find(|e| e.position.distance(&unit.position) < unit.firing_distance())
             .is_some()
     }
 
@@ -87,8 +89,9 @@ impl Behaviour for Fighting {
             .iter()
             .map(|p| (p, bullet_trace_score(&traces, &p) + my_units_collision_score(&p, unit) + p.distance(&goal)))
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
-            .unwrap()
-            .0
+            .map(|e| e.0)
+            //TODO
+            .unwrap_or(&game.zone.current_center)
             .clone();
 
         if let Some(debug) = debug_interface.as_mut() {
