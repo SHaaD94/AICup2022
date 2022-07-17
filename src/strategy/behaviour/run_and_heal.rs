@@ -11,13 +11,6 @@ pub struct RunAndHeal {}
 
 impl Behaviour for RunAndHeal {
     fn should_use(&self, unit: &Unit) -> bool {
-        // if get_units().iter()
-        //     .filter(|e| {
-        //         let distance = get_constants().weapons[e.weapon.unwrap_or(0) as usize].firing_distance();
-        //         e.position.distance(&unit.position) < distance
-        //     })
-        //     .find(|e| !simulation(unit, e)).is_some() { return true; };
-
         unit.health < get_constants().unit_health * 0.5
             || unit.shield < get_constants().max_shield && unit.shield_potions > 0
     }

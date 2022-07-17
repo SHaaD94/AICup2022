@@ -37,46 +37,19 @@ impl Behaviour for MoveOrLoot {
 
         let goal = match best_not_intersecting_loot {
             None => {
-                let angle = (unit.position.clone() - game.zone.current_center.clone()).angle();
-                let next_point = rotate(
-                    game.zone.current_center.clone(),
-                    angle + 0.1,
-                    game.zone.current_radius * 0.85,
-                );
-                next_point
-            }
-            Some(g) => g.position,
-        };
-
-        let goal = match unit.my_closest_other_unit() {
-            None => goal,
-            Some((distance, other)) => {
-                // finding a leader
-                let leader = if other.weapon.unwrap_or(0) < unit.weapon.unwrap_or(0) {
-                    other
-                } else if other.weapon.unwrap_or(0) > unit.weapon.unwrap_or(0) {
-                    unit
-                } else if other.ammo_for_current_weapon() < unit.ammo_for_current_weapon() {
-                    other
-                } else if other.ammo_for_current_weapon() > unit.ammo_for_current_weapon() {
-                    unit
-                } else if other.id < unit.id {
-                    other
+                let other = unit.my_closest_other_unit();
+                if other.is_some() && other.unwrap().0 > 10.0 {
+                    other.unwrap().1.position
                 } else {
-                    unit
-                };
-                if let Some(d) = debug_interface {
-                    d.add_circle(leader.position, 1.0, TRANSPARENT_GREEN)
-                }
-
-                if unit.id == leader.id {
-                    goal
-                } else if distance < 5.0 || other.position.distance(&goal) < 5.0 {
-                    goal
-                } else {
-                    other.position
+                    let angle = (unit.position.clone() - game.zone.current_center.clone()).angle();
+                    rotate(
+                        game.zone.current_center.clone(),
+                        angle + 0.1,
+                        game.zone.current_radius * 0.85,
+                    )
                 }
             }
+            Some(ref g) => g.position,
         };
 
         let result_move = unit

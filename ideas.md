@@ -5,3 +5,4 @@
 4. Better bullet dodging
 5. Team behaviour
 6. Explore as much as possible during being a ghost
+7. A* for dodging bullets + goal position reaching

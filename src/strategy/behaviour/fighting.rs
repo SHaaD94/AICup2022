@@ -3,7 +3,7 @@ use crate::debugging::{BLUE, RED, TEAL, TRANSPARENT_BLUE, TRANSPARENT_TEAL};
 use crate::model::ActionOrder::Aim;
 use crate::model::{Obstacle, Unit, UnitOrder, Vec2, WeaponProperties};
 use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour, zone_penalty, my_units_magnet_score, my_units_collision_score};
-use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_enemy_units};
+use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_enemy_units, get_fight_simulations};
 use crate::strategy::util::{bullet_trace_score, intersects_with_obstacles, intersects_with_obstacles_vec, get_projectile_traces, intersects_with_units_vec};
 use itertools::{all, Itertools};
 use std::cmp::{max, min};
@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Formatter, Pointer};
 use std::path::Display;
+use crate::strategy::holder::fight_sim::FightSimResult;
 
 pub struct Fighting {}
 
@@ -27,16 +28,13 @@ impl Behaviour for Fighting {
             return false;
         };
 
-        let my_team = find_my_team(&unit);
-        let enemy_groups = find_enemy_groups(&unit);
-
-        enemy_groups
-            .iter()
-            .find(|e| can_win(&my_team, e, get_all_enemy_units().len() <= my_team.len()))
-            // .find(|e| {
-            //     e.position.distance(&unit.position) - get_constants().unit_radius
-            //         < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
-            // })
+        let fight_sims = get_fight_simulations();
+        fight_sims.into_iter()
+            .find(|s| s.allies.contains(&unit.id) && match s.result {
+                FightSimResult::WON(_) => { true }
+                FightSimResult::DRAW => true,
+                FightSimResult::LOST => false,
+            })
             .is_some()
     }
 
@@ -47,26 +45,22 @@ impl Behaviour for Fighting {
         let constants = get_constants();
         let weapon = &constants.weapons[unit.weapon.unwrap_or(0) as usize];
         let traces = get_projectile_traces();
-        let my_team = find_my_team(&unit);
-        let enemy_groups = find_enemy_groups(&unit);
+        let fight_sims = get_fight_simulations();
 
-        if let Some(debug) = debug_interface.as_mut() {
-            for t in &my_team {
-                debug.add_circle(t.position.clone(), 0.5, TRANSPARENT_TEAL.clone());
-            }
-        }
-
-        let target = enemy_groups
-            .iter()
-            .filter(|e| can_win(&my_team, e, e.len() <= my_team.len()))
-            .flatten()
+        let targets = fight_sims.into_iter()
+            .filter(|s| s.allies.contains(&unit.id) && match s.result {
+                FightSimResult::WON(_) => { true }
+                FightSimResult::DRAW => true,
+                FightSimResult::LOST => false,
+            })
+            .flat_map(|s| s.enemy_units())
             .map(|e| (e, e.position.distance(&unit.position)))
-            .min_by(|(_, score1), (_, score2)| score1.partial_cmp(score2).unwrap())
-            // .find(|e| {
-            //     e.position.distance(&unit.position) - get_constants().unit_radius
-            //         < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
-            // })
+            .collect_vec();
+
+        let target = targets.iter()
+            .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
             .unwrap().0;
+
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(target.position.clone(), 0.5, RED.clone());
         }
@@ -105,9 +99,12 @@ impl Behaviour for Fighting {
         let ticks_until_next_shot =
             max(get_game().current_tick, unit.next_shot_tick) - get_game().current_tick;
         let action =
-            if ticks_until_next_shot as f64 <= weapon.ticks_to_aim() as f64 * (1.0 - unit.aim) {
+            if fire_target.distance(&unit.position) < weapon.firing_distance() &&
+                ticks_until_next_shot as f64 <= weapon.ticks_to_aim() as f64 * (1.0 - unit.aim) {
                 Some(Aim {
-                    shoot: !intersects_with_friends && !intersects_with_obstacles && unit.is_inside_vision(&target.position),
+                    shoot: !intersects_with_friends
+                        && !intersects_with_obstacles
+                        && unit.is_inside_vision(&target.position),
                 })
             } else {
                 None
@@ -119,22 +116,6 @@ impl Behaviour for Fighting {
             action: action,
         }
     }
-}
-
-fn find_enemy_groups(unit: &Unit) -> Vec<Vec<&Unit>> {
-    let mut groups = Vec::new();
-    for (_, units) in &get_all_enemy_units()
-        .iter()
-        .filter(|e| e.remaining_spawn_time.is_none())
-        .group_by(|e| e.player_id) {
-        groups.push(units.collect_vec());
-    }
-    groups
-}
-
-fn find_my_team(unit: &Unit) -> Vec<&Unit> {
-    unit.my_other_units().into_iter()
-        .filter(|e| e.position.distance(&unit.position) < 10.0).collect_vec()
 }
 
 fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) -> Vec2 {
@@ -175,82 +156,4 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
         }
     }
     best_point
-}
-
-struct FightProps {
-    weapon: WeaponProperties,
-    ammo: i32,
-    aim: f64,
-    health: f64,
-    fire_tick: i32,
-}
-
-impl fmt::Display for FightProps {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "tick {}, rate {}, ammo {}, health {}", self.fire_tick, self.weapon.get_fire_rate_in_ticks(), self.ammo, self.health)
-    }
-}
-
-pub fn can_win(u1: &Vec<&Unit>, u2: &Vec<&Unit>, allow_draw: bool) -> bool {
-    fn fighter_props(team: &Vec<&Unit>) -> Vec<FightProps> {
-        team.iter()
-            .filter(|e| e.weapon.is_some())
-            .filter(|e| e.ammo[e.weapon.unwrap() as usize] != 0)
-            .map(|e| FightProps {
-                weapon: get_constants().weapons[e.weapon.unwrap() as usize].clone(),
-                aim: e.aim,
-                ammo: e.ammo[e.weapon.unwrap() as usize],
-                health: e.health + e.shield,
-                fire_tick: -(max(get_game().current_tick, e.next_shot_tick) - get_game().current_tick),
-            })
-            .collect_vec()
-    }
-    let mut allies = fighter_props(u1);
-    if allies.is_empty() {
-        return false;
-    }
-    let mut enemies = fighter_props(u2);
-    if enemies.is_empty() {
-        return true;
-    }
-
-    // println!("START!");
-    while !allies.is_empty() && !enemies.is_empty() {
-        // println!("{}, enemies {}",
-        //          allies.iter().map(|e| e.to_string()).join(","),
-        //          enemies.iter().map(|e| e.to_string()).join(","));
-        let min_fire_rate =
-            allies.iter().map(|e| e.weapon.get_fire_rate_in_ticks()).chain(enemies.iter().map(|e| e.weapon.get_fire_rate_in_ticks()))
-                .min().unwrap();
-        fn process_tick(fire_rate: i32, cur_team: &mut Vec<FightProps>, other_team: &mut Vec<FightProps>) {
-            for mut ally in cur_team {
-                ally.fire_tick += fire_rate;
-                if ally.fire_tick >= ally.weapon.get_fire_rate_in_ticks() {
-                    ally.fire_tick -= ally.weapon.get_fire_rate_in_ticks();
-                    for mut enemy in &mut *other_team {
-                        if enemy.health > 0.0 {
-                            enemy.health -= ally.weapon.projectile_damage;
-                            break;
-                        }
-                    }
-                    ally.ammo -= 1
-                }
-            }
-        }
-        process_tick(min_fire_rate, &mut allies, &mut enemies);
-        process_tick(min_fire_rate, &mut enemies, &mut allies);
-
-        for i in (0..allies.len()).rev() {
-            if allies[i].ammo == 0 || allies[i].health <= 0.0 {
-                allies.remove(i);
-            }
-        }
-        for i in (0..enemies.len()).rev() {
-            if enemies[i].ammo == 0 || enemies[i].health <= 0.0 {
-                enemies.remove(i);
-            }
-        }
-    }
-    // println!("END!");
-    return (!allies.is_empty() || allow_draw) && enemies.is_empty();
 }

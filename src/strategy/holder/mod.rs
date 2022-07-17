@@ -1,8 +1,11 @@
+pub mod fight_sim;
+
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED};
 use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit, Vec2};
 use itertools::Itertools;
 use std::collections::HashMap;
+use crate::strategy::holder::fight_sim::{create_fight_simulations, FightSim};
 
 static mut GAME: Game = Game::const_default();
 static mut CONSTANTS: Constants = Constants::const_default();
@@ -15,7 +18,13 @@ static mut BOOKED_LOOT: Vec<i32> = vec![];
 static mut UNIT_TO_TICK: Vec<(i32, Unit)> = vec![];
 static mut UNITS: Vec<Unit> = vec![];
 
+static mut FIGHT_SIM_RESULT: Vec<FightSim> = vec![];
+
 static mut PROJECTILES: Vec<Projectile> = vec![];
+
+pub fn get_fight_simulations() -> &'static Vec<FightSim> {
+    unsafe { &FIGHT_SIM_RESULT }
+}
 
 pub fn book_loot(id: i32) {
     unsafe { BOOKED_LOOT.push(id) }
@@ -78,6 +87,8 @@ pub fn update_game(game: Game, debug_interface: &mut Option<&mut DebugInterface>
     update_projectiles(&game);
 
     unsafe { GAME = game }
+
+    unsafe { FIGHT_SIM_RESULT = create_fight_simulations(debug_interface) }
 }
 
 fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) {

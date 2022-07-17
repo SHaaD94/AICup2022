@@ -34,13 +34,13 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
             let score: i32 = match l.item {
                 Item::Weapon { type_index } => {
                     if current_weapon.is_none() {
-                        (type_index + 1) * 100
+                        (type_index + 1) * 10
                     } else {
                         if ammo[type_index as usize] == 0 {
                             0
                         } else {
                             if current_weapon.unwrap() < type_index {
-                                (type_index + 1) * 100
+                                (type_index + 1) * 10
                             } else {
                                 0
                             }
@@ -48,11 +48,12 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
                     }
                 }
                 Item::ShieldPotions { amount } => {
-                    if unit.shield_potions < constants.max_shield_potions_in_inventory {
-                        (300.0 / (unit.health / constants.unit_health)).ceil() as i32
-                    } else {
-                        0
-                    }
+                    // if unit.shield_potions < constants.max_shield_potions_in_inventory {
+                    //     (300.0 / (unit.health / constants.unit_health)).ceil() as i32
+                    // } else {
+                    //     0
+                    // }
+                    10
                 }
                 Item::Ammo {
                     weapon_type_index,
@@ -63,9 +64,9 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
                     if percent_of_max_ammo == 1.0 {
                         0
                     } else if percent_of_max_ammo == 0.0 {
-                        (weapon_type_index + 1) * 75
+                        (weapon_type_index + 1) * 5
                     } else {
-                        ((weapon_type_index + 1) as f64 * 75.0 / percent_of_max_ammo).ceil() as i32
+                        ((weapon_type_index + 1) as f64 * 5.0 / percent_of_max_ammo).ceil() as i32
                     }
                 }
             };
@@ -74,7 +75,9 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
             //     Item::ShieldPotions { .. } => { "shield" }
             //     Item::Ammo { .. } => { "ammo" }
             // }, score, -l.position.distance(&unit.position) + my_units_magnet_score(&l.position, unit));
-            (score.clone() as f64 - l.position.distance(&unit.position), l)
+            (score.clone() as f64
+                 - l.position.distance(&unit.position)
+                 - my_units_magnet_score(&l.position, unit), l)
         })
         .max_by(|(score1, _), (score2, _)| score1.partial_cmp(score2).unwrap())
         .map(|e| e.1.clone())

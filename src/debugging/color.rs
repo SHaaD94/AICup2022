@@ -20,6 +20,19 @@ pub static RED: Color = Color {
     a: 1.0,
 };
 
+pub static TRANSPARENT_BLACK: Color = Color {
+    r: 0.0,
+    g: 0.0,
+    b: 0.0,
+    a: 0.5,
+};
+pub static TRANSPARENT_ORANGE: Color = Color {
+    r: 255.0,
+    g: 165.0,
+    b: 0.0,
+    a: 0.5,
+};
+
 pub static YELLOW: Color = Color {
     r: 255.0,
     g: 165.0,
