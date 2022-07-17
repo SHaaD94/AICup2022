@@ -2,22 +2,17 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE};
 use crate::model::ActionOrder::UseShieldPotion;
 use crate::model::{Unit, UnitOrder, Vec2};
-use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour};
-use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_units};
-use crate::strategy::util::{bullet_trace_score, does_intersect, get_projectile_traces, rotate};
+use crate::strategy::behaviour::behaviour::{my_units_magnet_score, write_behaviour, Behaviour};
+use crate::strategy::holder::{get_all_enemy_units, get_constants, get_game, get_obstacles};
+use crate::strategy::util::{
+    bullet_trace_score, get_projectile_traces, intersects_with_obstacles, rotate,
+};
 use std::env::set_current_dir;
 
 pub struct RunAndHeal {}
 
 impl Behaviour for RunAndHeal {
     fn should_use(&self, unit: &Unit) -> bool {
-        // if get_units().iter()
-        //     .filter(|e| {
-        //         let distance = get_constants().weapons[e.weapon.unwrap_or(0) as usize].firing_distance();
-        //         e.position.distance(&unit.position) < distance
-        //     })
-        //     .find(|e| !simulation(unit, e)).is_some() { return true; };
-
         unit.health < get_constants().unit_health * 0.5
             || unit.shield < get_constants().max_shield && unit.shield_potions > 0
     }
@@ -26,7 +21,7 @@ impl Behaviour for RunAndHeal {
         write_behaviour(unit, "Run".to_owned(), debug_interface);
 
         let mut top_score: f64 = f64::MAX;
-        let mut goal: Vec2 = Vec2::default();
+        let mut goal: Vec2 = get_game().zone.current_center.clone();
         let obstacles = get_obstacles(unit.id);
         let traces = get_projectile_traces();
         for p in unit.points_in_radius(10) {
@@ -43,7 +38,7 @@ impl Behaviour for RunAndHeal {
             if let Some(debug) = debug_interface.as_mut() {
                 debug.add_circle(p.clone(), 0.1, RED.clone());
             }
-            let enemy_score = get_units()
+            let enemy_score = get_all_enemy_units()
                 .iter()
                 .map(|e| e.position.distance(&p))
                 .min_by_key(|s| s.ceil() as i64)
@@ -53,7 +48,8 @@ impl Behaviour for RunAndHeal {
             } else {
                 p.distance(&unit.position)
             };
-            let res = -enemy_score - distance_from_previous_score;
+            let res = -enemy_score - distance_from_previous_score
+                + (my_units_magnet_score(&p, unit) / 2.0);
             if res < top_score {
                 goal = p;
                 top_score = res;
@@ -61,7 +57,7 @@ impl Behaviour for RunAndHeal {
         }
 
         let result_move = unit
-            .points_around_unit()
+            .points_around_unit(true)
             .iter()
             .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())

@@ -1,6 +1,9 @@
+pub mod fight_sim;
+
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED};
 use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit, Vec2};
+use crate::strategy::holder::fight_sim::{create_fight_simulations, FightSim};
 use itertools::Itertools;
 use std::collections::HashMap;
 
@@ -10,11 +13,26 @@ static mut NEAREST_OBSTACLES: Vec<(i32, Vec<Obstacle>)> = vec![];
 
 static mut LOOT_TO_TICK: Vec<(i32, Loot)> = vec![];
 static mut LOOT: Vec<Loot> = vec![];
+static mut BOOKED_LOOT: Vec<i32> = vec![];
 
 static mut UNIT_TO_TICK: Vec<(i32, Unit)> = vec![];
 static mut UNITS: Vec<Unit> = vec![];
 
+static mut FIGHT_SIM_RESULT: Vec<FightSim> = vec![];
+
 static mut PROJECTILES: Vec<Projectile> = vec![];
+
+pub fn get_fight_simulations() -> &'static Vec<FightSim> {
+    unsafe { &FIGHT_SIM_RESULT }
+}
+
+pub fn book_loot(id: i32) {
+    unsafe { BOOKED_LOOT.push(id) }
+}
+
+pub fn is_loot_booked(id: &i32) -> bool {
+    unsafe { BOOKED_LOOT.contains(&id) }
+}
 
 pub fn get_constants() -> &'static Constants {
     unsafe { &CONSTANTS }
@@ -24,7 +42,7 @@ pub fn get_game() -> &'static Game {
     unsafe { &GAME }
 }
 
-pub fn get_units() -> &'static Vec<Unit> {
+pub fn get_all_enemy_units() -> &'static Vec<Unit> {
     unsafe { &UNITS }
 }
 
@@ -60,6 +78,7 @@ pub fn get_obstacles(unit_id: i32) -> Vec<Obstacle> {
 }
 
 pub fn update_game(game: Game, debug_interface: &mut Option<&mut DebugInterface>) {
+    unsafe { BOOKED_LOOT.clear() }
     let constants = get_constants();
 
     set_nearest_obstacles(&game, constants);
@@ -68,6 +87,8 @@ pub fn update_game(game: Game, debug_interface: &mut Option<&mut DebugInterface>
     update_projectiles(&game);
 
     unsafe { GAME = game }
+
+    unsafe { FIGHT_SIM_RESULT = create_fight_simulations(debug_interface) }
 }
 
 fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) {
@@ -148,7 +169,7 @@ fn update_projectiles(game: &Game) {
                 None => continue,
                 Some(pos) => pos,
             };
-            let intersects_with_units = get_units()
+            let intersects_with_units = get_all_enemy_units()
                 .iter()
                 .find(|e| e.position.distance(&new_pos) < get_constants().unit_radius)
                 .is_some();

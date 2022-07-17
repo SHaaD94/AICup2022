@@ -1,7 +1,7 @@
 use super::*;
 
 /// RGBA Color
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct Color {
     /// Red component
     pub r: f64,
@@ -19,6 +19,20 @@ pub static RED: Color = Color {
     b: 0.0,
     a: 1.0,
 };
+
+pub static TRANSPARENT_BLACK: Color = Color {
+    r: 0.0,
+    g: 0.0,
+    b: 0.0,
+    a: 0.5,
+};
+pub static TRANSPARENT_ORANGE: Color = Color {
+    r: 255.0,
+    g: 165.0,
+    b: 0.0,
+    a: 0.5,
+};
+
 pub static YELLOW: Color = Color {
     r: 255.0,
     g: 165.0,
@@ -54,6 +68,12 @@ pub static TEAL: Color = Color {
     g: 255.0,
     b: 255.0,
     a: 1.0,
+};
+pub static TRANSPARENT_TEAL: Color = Color {
+    r: 0.0,
+    g: 255.0,
+    b: 255.0,
+    a: 0.5,
 };
 
 impl trans::Trans for Color {

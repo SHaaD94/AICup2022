@@ -4,8 +4,8 @@ use ai_cup_22::model::ActionOrder::Aim;
 use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
 use ai_cup_22::strategy::get_order;
 use ai_cup_22::strategy::holder::{
-    get_constants, get_game, get_loot, get_obstacles, get_projectiles, get_units, set_constants,
-    update_game,
+    get_all_enemy_units, get_constants, get_game, get_loot, get_obstacles, get_projectiles,
+    set_constants, update_game,
 };
 use ai_cup_22::strategy::util::get_projectile_traces;
 use ai_cup_22::*;
@@ -34,7 +34,7 @@ impl MyStrategy {
         update_game(game, debug_interface);
 
         if let Some(debug) = debug_interface.as_mut() {
-            Self::draw_sounds(debug);
+            // Self::draw_sounds(debug);
             // Self::draw_vision(debug);
             Self::draw_units(debug);
             Self::draw_points_around(debug);
@@ -70,7 +70,7 @@ impl MyStrategy {
 
     fn draw_points_around(debug: &mut DebugInterface) {
         for unit in get_game().my_units() {
-            for x in unit.points_around_unit() {
+            for x in unit.points_around_unit(false) {
                 debug.add_circle(x, 0.1, GREEN.clone());
             }
         }
@@ -107,7 +107,7 @@ impl MyStrategy {
     }
 
     fn draw_units(debug: &mut DebugInterface) {
-        for x in get_units() {
+        for x in get_all_enemy_units() {
             debug.add_circle(
                 x.position.clone(),
                 get_constants().unit_radius,

@@ -11,6 +11,7 @@ use crate::model::ActionOrder::Aim;
 use crate::model::{ActionOrder, Constants, Game, Item, Loot, Unit, UnitOrder, Vec2};
 use crate::strategy::behaviour::behaviour::Behaviour;
 use crate::strategy::behaviour::fighting::Fighting;
+use crate::strategy::behaviour::ghosting::Ghosting;
 use crate::strategy::behaviour::move_or_loot::MoveOrLoot;
 use crate::strategy::behaviour::run_and_heal::RunAndHeal;
 use crate::strategy::holder::{get_constants, get_game};
@@ -23,6 +24,7 @@ pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Or
     let constants = get_constants();
 
     let behaviours: Vec<Box<dyn Behaviour>> = vec![
+        Box::new(Ghosting {}),
         Box::new(Fighting {}),
         Box::new(RunAndHeal {}),
         Box::new(MoveOrLoot {}),
@@ -31,6 +33,7 @@ pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Or
     let orders: HashMap<i32, UnitOrder> = game
         .my_units()
         .into_iter()
+        .sorted_by_key(|e| e.id)
         .map(|u| {
             let mut order: UnitOrder = UnitOrder {
                 target_velocity: Default::default(),

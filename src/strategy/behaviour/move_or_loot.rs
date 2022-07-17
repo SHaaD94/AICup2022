@@ -2,8 +2,8 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE, TRANSPARENT_GREEN};
 use crate::model::ActionOrder::Pickup;
 use crate::model::{Loot, Unit, UnitOrder, Vec2};
-use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour};
-use crate::strategy::holder::{get_constants, get_game, get_loot, remove_loot};
+use crate::strategy::behaviour::behaviour::{my_units_collision_score, write_behaviour, Behaviour};
+use crate::strategy::holder::{book_loot, get_constants, get_game, get_loot, remove_loot};
 use crate::strategy::loot::best_loot;
 use crate::strategy::util::{bullet_trace_score, get_projectile_traces, rotate};
 
@@ -30,25 +30,43 @@ impl Behaviour for MoveOrLoot {
                 }
             }
         }
+        if let Some(ref l) = best_intersecting_loot {
+            book_loot(l.id.clone());
+        }
+        if let Some(ref l) = best_not_intersecting_loot {
+            book_loot(l.id.clone());
+        }
+
         let traces = get_projectile_traces();
 
         let goal = match best_not_intersecting_loot {
             None => {
-                let angle = (unit.position.clone() - game.zone.current_center.clone()).angle();
-                let next_point = rotate(
-                    game.zone.current_center.clone(),
-                    angle + 0.1,
-                    game.zone.current_radius * 0.85,
-                );
-                next_point
+                let other = unit.my_closest_other_unit();
+                if other.is_some() && other.unwrap().0 > 10.0 {
+                    other.unwrap().1.position
+                } else {
+                    let angle = (unit.position.clone() - game.zone.current_center.clone()).angle();
+                    rotate(
+                        game.zone.current_center.clone(),
+                        angle + 0.1,
+                        game.zone.current_radius * 0.85,
+                    )
+                }
             }
-            Some(g) => g.position,
+            Some(ref g) => g.position,
         };
 
         let result_move = unit
-            .points_around_unit()
+            .points_around_unit(true)
             .iter()
-            .map(|e| (e, bullet_trace_score(&traces, &e) + e.distance(&goal)))
+            .map(|p| {
+                (
+                    p,
+                    bullet_trace_score(&traces, &p)
+                        + my_units_collision_score(p, unit)
+                        + p.distance(&goal),
+                )
+            })
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
             .unwrap()
             .0

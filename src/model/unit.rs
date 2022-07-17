@@ -1,6 +1,7 @@
 use super::*;
-use crate::strategy::holder::{get_constants, get_obstacles};
+use crate::strategy::holder::{get_constants, get_game, get_obstacles};
 use crate::strategy::util::rotate;
+use itertools::Itertools;
 use std::f64::consts::PI;
 
 /// A unit
@@ -62,6 +63,31 @@ impl Unit {
         }
     }
 
+    pub fn ammo_for_current_weapon(&self) -> i32 {
+        match self.weapon {
+            None => 0,
+            Some(w) => self.ammo[w as usize],
+        }
+    }
+
+    pub fn my_other_units(&self) -> Vec<&Unit> {
+        get_game()
+            .my_units()
+            .into_iter()
+            .filter(|e| self.id != e.id)
+            .collect_vec()
+    }
+
+    pub fn my_closest_other_unit(&self) -> Option<(f64, &Unit)> {
+        get_game()
+            .my_units()
+            .into_iter()
+            .filter(|e| self.id != e.id)
+            .filter(|e| e.remaining_spawn_time.is_none())
+            .map(|e| (e.position.distance(&self.position), e))
+            .min_by(|(d1, _), (d2, _)| d1.partial_cmp(d2).unwrap())
+    }
+
     pub fn is_inside_vision(&self, p: &Vec2) -> bool {
         if self.position.distance(p) > get_constants().view_distance {
             return false;
@@ -94,7 +120,7 @@ impl Unit {
         }
         return res;
     }
-    pub fn points_around_unit(&self) -> Vec<Vec2> {
+    pub fn points_around_unit(&self, check_obstacles: bool) -> Vec<Vec2> {
         let points_around = 10;
         let constants = get_constants();
 
@@ -121,7 +147,7 @@ impl Unit {
                         < o.radius + get_constants().unit_radius
                 })
                 .is_some();
-            if !intersects_with_obstacles {
+            if !intersects_with_obstacles || !check_obstacles {
                 res.push(next_vec);
             }
             cur_angle += angle_diff;
