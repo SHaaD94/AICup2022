@@ -1,5 +1,5 @@
 use crate::debug_interface::DebugInterface;
-use crate::debugging::{BLUE, RED, TRANSPARENT_BLUE};
+use crate::debugging::{BLUE, RED, TEAL, TRANSPARENT_BLUE, TRANSPARENT_TEAL};
 use crate::model::ActionOrder::Aim;
 use crate::model::{Obstacle, Unit, UnitOrder, Vec2, WeaponProperties};
 use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour, zone_penalty, my_units_magnet_score, my_units_collision_score};
@@ -7,6 +7,7 @@ use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_en
 use crate::strategy::util::{bullet_trace_score, intersects_with_obstacles, intersects_with_obstacles_vec, get_projectile_traces, intersects_with_units_vec};
 use itertools::{all, Itertools};
 use std::cmp::{max, min};
+use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Formatter, Pointer};
 use std::path::Display;
@@ -26,13 +27,16 @@ impl Behaviour for Fighting {
             return false;
         };
 
-        get_all_enemy_units()
+        let my_team = find_my_team(&unit);
+        let enemy_groups = find_enemy_groups(&unit);
+
+        enemy_groups
             .iter()
-            .filter(|e| can_win(&Vec::from([unit]), &Vec::from([*e]), get_all_enemy_units().len() == 1))
-            .find(|e| {
-                e.position.distance(&unit.position) - get_constants().unit_radius
-                    < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
-            })
+            .find(|e| can_win(&my_team, e, get_all_enemy_units().len() <= my_team.len()))
+            // .find(|e| {
+            //     e.position.distance(&unit.position) - get_constants().unit_radius
+            //         < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
+            // })
             .is_some()
     }
 
@@ -43,12 +47,26 @@ impl Behaviour for Fighting {
         let constants = get_constants();
         let weapon = &constants.weapons[unit.weapon.unwrap_or(0) as usize];
         let traces = get_projectile_traces();
-        let target = get_all_enemy_units()
-            .iter()
-            .filter(|e| can_win(&Vec::from([unit]), &Vec::from([*e]), get_all_enemy_units().len() == 1))
-            .min_by_key(|e| e.position.distance(&unit.position) as i64)
-            .unwrap();
+        let my_team = find_my_team(&unit);
+        let enemy_groups = find_enemy_groups(&unit);
 
+        if let Some(debug) = debug_interface.as_mut() {
+            for t in &my_team {
+                debug.add_circle(t.position.clone(), 0.5, TRANSPARENT_TEAL.clone());
+            }
+        }
+
+        let target = enemy_groups
+            .iter()
+            .filter(|e| can_win(&my_team, e, e.len() <= my_team.len()))
+            .flatten()
+            .map(|e| (e, e.position.distance(&unit.position)))
+            .min_by(|(_, score1), (_, score2)| score1.partial_cmp(score2).unwrap())
+            // .find(|e| {
+            //     e.position.distance(&unit.position) - get_constants().unit_radius
+            //         < get_constants().weapons[unit.weapon.unwrap() as usize].firing_distance()
+            // })
+            .unwrap().0;
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(target.position.clone(), 0.5, RED.clone());
         }
@@ -73,7 +91,7 @@ impl Behaviour for Fighting {
         let result_move = unit
             .points_around_unit(true)
             .iter()
-            .map(|p| (p, bullet_trace_score(&traces, &p) /*+ my_units_collision_score(&p, unit)*/ + p.distance(&goal)))
+            .map(|p| (p, bullet_trace_score(&traces, &p) + my_units_collision_score(&p, unit) + p.distance(&goal)))
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
             .unwrap()
             .0
@@ -101,6 +119,22 @@ impl Behaviour for Fighting {
             action: action,
         }
     }
+}
+
+fn find_enemy_groups(unit: &Unit) -> Vec<Vec<&Unit>> {
+    let mut groups = Vec::new();
+    for (_, units) in &get_all_enemy_units()
+        .iter()
+        .filter(|e| e.remaining_spawn_time.is_none())
+        .group_by(|e| e.player_id) {
+        groups.push(units.collect_vec());
+    }
+    groups
+}
+
+fn find_my_team(unit: &Unit) -> Vec<&Unit> {
+    unit.my_other_units().into_iter()
+        .filter(|e| e.position.distance(&unit.position) < 10.0).collect_vec()
 }
 
 fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) -> Vec2 {

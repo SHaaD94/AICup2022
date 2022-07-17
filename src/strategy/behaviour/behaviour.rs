@@ -22,7 +22,7 @@ pub fn write_behaviour(
     debug_interface: &mut Option<&mut DebugInterface>,
 ) {
     if let Some(debug) = debug_interface.as_mut() {
-        let result_text = format!("{}, {}, {}", text, unit.weapon.unwrap_or(0), unit.ammo_for_current_weapon());
+        let result_text = format!("{}, {}, {}, {}", text, unit.extra_lives, unit.weapon.unwrap_or(0), unit.ammo_for_current_weapon());
         debug.add_placed_text(
             unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
             result_text,
@@ -50,8 +50,8 @@ pub fn my_units_collision_score(p: &Vec2, unit: &Unit) -> f64 {
         None => 0.0,
         Some(other) => {
             let distance = other.1.position.distance(p);
-            if distance <= 3.0 {
-                (3.0 - distance) * 100.0
+            if distance <= 5.0 {
+                5.0 - distance
             } else {
                 0.0
             }

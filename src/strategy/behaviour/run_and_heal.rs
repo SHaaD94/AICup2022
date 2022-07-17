@@ -26,7 +26,7 @@ impl Behaviour for RunAndHeal {
         write_behaviour(unit, "Run".to_owned(), debug_interface);
 
         let mut top_score: f64 = f64::MAX;
-        let mut goal: Vec2 = Vec2::default();
+        let mut goal: Vec2 = get_game().zone.current_center.clone();
         let obstacles = get_obstacles(unit.id);
         let traces = get_projectile_traces();
         for p in unit.points_in_radius(10) {
