@@ -4,8 +4,8 @@ use ai_cup_22::model::ActionOrder::Aim;
 use ai_cup_22::model::{Constants, Game, UnitOrder, Vec2};
 use ai_cup_22::strategy::get_order;
 use ai_cup_22::strategy::holder::{
-    get_constants, get_game, get_loot, get_obstacles, get_projectiles, get_all_enemy_units, set_constants,
-    update_game,
+    get_all_enemy_units, get_constants, get_game, get_loot, get_obstacles, get_projectiles,
+    set_constants, update_game,
 };
 use ai_cup_22::strategy::util::get_projectile_traces;
 use ai_cup_22::*;

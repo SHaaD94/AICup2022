@@ -7,16 +7,22 @@ use std::cmp::min;
 pub fn rotate(center: Vec2, angle: f64, distance: f64) -> Vec2 {
     center
         + Vec2 {
-        x: angle.cos() * distance,
-        y: angle.sin() * distance,
-    }
+            x: angle.cos() * distance,
+            y: angle.sin() * distance,
+        }
 }
 
 pub fn intersects_with_obstacles_vec(v1: &Vec2, v2: &Vec2, obstacles: &Vec<Obstacle>) -> bool {
     intersects_with_obstacles(v1.x, v1.y, v2.x, v2.y, obstacles)
 }
 
-pub fn intersects_with_obstacles(x1: f64, y1: f64, x2: f64, y2: f64, obstacles: &Vec<Obstacle>) -> bool {
+pub fn intersects_with_obstacles(
+    x1: f64,
+    y1: f64,
+    x2: f64,
+    y2: f64,
+    obstacles: &Vec<Obstacle>,
+) -> bool {
     for obs in obstacles.iter().filter(|o| {
         let min_x = if x1 < x2 { x1 } else { x2 } - o.radius;
         let max_x = if x1 >= x2 { x1 } else { x2 } + o.radius;

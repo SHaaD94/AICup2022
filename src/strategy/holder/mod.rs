@@ -3,9 +3,9 @@ pub mod fight_sim;
 use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED};
 use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit, Vec2};
+use crate::strategy::holder::fight_sim::{create_fight_simulations, FightSim};
 use itertools::Itertools;
 use std::collections::HashMap;
-use crate::strategy::holder::fight_sim::{create_fight_simulations, FightSim};
 
 static mut GAME: Game = Game::const_default();
 static mut CONSTANTS: Constants = Constants::const_default();
@@ -136,7 +136,7 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
     }
 
     unsafe { UNIT_TO_TICK = units_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { UNITS = units_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
+    unsafe { UNITS = units_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
 }
 
 fn update_loot(game: &Game) {
@@ -153,7 +153,7 @@ fn update_loot(game: &Game) {
         }
     }
     unsafe { LOOT_TO_TICK = loot_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
+    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
 }
 
 fn update_projectiles(game: &Game) {

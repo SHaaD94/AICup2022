@@ -1,9 +1,9 @@
 use crate::model::{Item, Loot, Unit, Vec2};
-use crate::strategy::holder::{get_constants, get_game, get_all_enemy_units, is_loot_booked};
+use crate::strategy::behaviour::behaviour::{my_units_collision_score, my_units_magnet_score};
+use crate::strategy::holder::{get_all_enemy_units, get_constants, get_game, is_loot_booked};
 use itertools::Itertools;
 use libc::clone;
 use std::any::Any;
-use crate::strategy::behaviour::behaviour::{my_units_collision_score, my_units_magnet_score};
 
 pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<Loot> {
     let constants = get_constants();
@@ -74,9 +74,12 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
             //     Item::ShieldPotions { .. } => { "shield" }
             //     Item::Ammo { .. } => { "ammo" }
             // }, score, -l.position.distance(&unit.position) + my_units_magnet_score(&l.position, unit));
-            (score.clone() as f64
-                 - l.position.distance(&unit.position)
-                 - my_units_magnet_score(&l.position, unit), l)
+            (
+                score.clone() as f64
+                    - l.position.distance(&unit.position)
+                    - my_units_magnet_score(&l.position, unit),
+                l,
+            )
         })
         .max_by(|(score1, _), (score2, _)| score1.partial_cmp(score2).unwrap())
         .map(|e| e.1.clone())

@@ -2,16 +2,23 @@ use crate::debug_interface::DebugInterface;
 use crate::debugging::{BLUE, RED, TEAL, TRANSPARENT_BLUE, TRANSPARENT_TEAL};
 use crate::model::ActionOrder::Aim;
 use crate::model::{Obstacle, Unit, UnitOrder, Vec2, WeaponProperties};
-use crate::strategy::behaviour::behaviour::{write_behaviour, Behaviour, zone_penalty, my_units_magnet_score, my_units_collision_score};
-use crate::strategy::holder::{get_constants, get_game, get_obstacles, get_all_enemy_units, get_fight_simulations};
-use crate::strategy::util::{bullet_trace_score, intersects_with_obstacles, intersects_with_obstacles_vec, get_projectile_traces, intersects_with_units_vec};
+use crate::strategy::behaviour::behaviour::{
+    my_units_collision_score, my_units_magnet_score, write_behaviour, zone_penalty, Behaviour,
+};
+use crate::strategy::holder::fight_sim::FightSimResult;
+use crate::strategy::holder::{
+    get_all_enemy_units, get_constants, get_fight_simulations, get_game, get_obstacles,
+};
+use crate::strategy::util::{
+    bullet_trace_score, get_projectile_traces, intersects_with_obstacles,
+    intersects_with_obstacles_vec, intersects_with_units_vec,
+};
 use itertools::{all, Itertools};
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Formatter, Pointer};
 use std::path::Display;
-use crate::strategy::holder::fight_sim::FightSimResult;
 
 pub struct Fighting {}
 
@@ -29,11 +36,15 @@ impl Behaviour for Fighting {
         };
 
         let fight_sims = get_fight_simulations();
-        fight_sims.into_iter()
-            .filter(|s| s.allies.contains(&unit.id) && match s.result {
-                FightSimResult::WON(_) => { true }
-                FightSimResult::DRAW => true,
-                FightSimResult::LOST => false,
+        fight_sims
+            .into_iter()
+            .filter(|s| {
+                s.allies.contains(&unit.id)
+                    && match s.result {
+                        FightSimResult::WON(_) => true,
+                        FightSimResult::DRAW => true,
+                        FightSimResult::LOST => false,
+                    }
             })
             .flat_map(|e| e.enemy_units())
             .find(|e| e.position.distance(&unit.position) < unit.firing_distance())
@@ -49,19 +60,25 @@ impl Behaviour for Fighting {
         let traces = get_projectile_traces();
         let fight_sims = get_fight_simulations();
 
-        let targets = fight_sims.into_iter()
-            .filter(|s| s.allies.contains(&unit.id) && match s.result {
-                FightSimResult::WON(_) => { true }
-                FightSimResult::DRAW => true,
-                FightSimResult::LOST => false,
+        let targets = fight_sims
+            .into_iter()
+            .filter(|s| {
+                s.allies.contains(&unit.id)
+                    && match s.result {
+                        FightSimResult::WON(_) => true,
+                        FightSimResult::DRAW => true,
+                        FightSimResult::LOST => false,
+                    }
             })
             .flat_map(|s| s.enemy_units())
             .map(|e| (e, e.position.distance(&unit.position)))
             .collect_vec();
 
-        let target = targets.iter()
+        let target = targets
+            .iter()
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
-            .unwrap().0;
+            .unwrap()
+            .0;
 
         if let Some(debug) = debug_interface.as_mut() {
             debug.add_circle(target.position.clone(), 0.5, RED.clone());
@@ -70,24 +87,25 @@ impl Behaviour for Fighting {
         let obstacles = &get_obstacles(unit.id);
         let fire_target = target.position.clone()
             + (target.velocity.clone() * unit.position.distance(&target.position)
-            / weapon.projectile_speed);
+                / weapon.projectile_speed);
 
-        let intersects_with_obstacles = intersects_with_obstacles_vec(
-            &unit.position,
-            &fire_target,
-            obstacles,
-        );
-        let intersects_with_friends = intersects_with_units_vec(
-            &unit.position,
-            &fire_target,
-            &unit.my_other_units(),
-        );
+        let intersects_with_obstacles =
+            intersects_with_obstacles_vec(&unit.position, &fire_target, obstacles);
+        let intersects_with_friends =
+            intersects_with_units_vec(&unit.position, &fire_target, &unit.my_other_units());
         let goal = get_best_firing_spot(unit, &target, obstacles);
 
         let result_move = unit
             .points_around_unit(true)
             .iter()
-            .map(|p| (p, bullet_trace_score(&traces, &p) + my_units_collision_score(&p, unit) + p.distance(&goal)))
+            .map(|p| {
+                (
+                    p,
+                    bullet_trace_score(&traces, &p)
+                        + my_units_collision_score(&p, unit)
+                        + p.distance(&goal),
+                )
+            })
             .min_by(|e1, e2| f64::partial_cmp(&e1.1, &e2.1).unwrap())
             .map(|e| e.0)
             //TODO
@@ -101,17 +119,17 @@ impl Behaviour for Fighting {
 
         let ticks_until_next_shot =
             max(get_game().current_tick, unit.next_shot_tick) - get_game().current_tick;
-        let action =
-            if fire_target.distance(&unit.position) < weapon.firing_distance() &&
-                ticks_until_next_shot as f64 <= weapon.ticks_to_aim() as f64 * (1.0 - unit.aim) {
-                Some(Aim {
-                    shoot: !intersects_with_friends
-                        && !intersects_with_obstacles
-                        && unit.is_inside_vision(&target.position),
-                })
-            } else {
-                None
-            };
+        let action = if fire_target.distance(&unit.position) < weapon.firing_distance()
+            && ticks_until_next_shot as f64 <= weapon.ticks_to_aim() as f64 * (1.0 - unit.aim)
+        {
+            Some(Aim {
+                shoot: !intersects_with_friends
+                    && !intersects_with_obstacles
+                    && unit.is_inside_vision(&target.position),
+            })
+        } else {
+            None
+        };
 
         UnitOrder {
             target_velocity: (result_move - unit.position.clone()) * 1000.0,
@@ -126,10 +144,19 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
     let mut best_score = f64::MIN;
     let constants = get_constants();
     for p in unit.points_in_radius(10) {
-        if obstacles.iter().find(|o| o.position.distance(&p) < o.radius + constants.unit_radius).is_some() {
+        if obstacles
+            .iter()
+            .find(|o| o.position.distance(&p) < o.radius + constants.unit_radius)
+            .is_some()
+        {
             continue;
         }
-        if unit.my_other_units().iter().find(|o| o.position.distance(&p) < constants.unit_radius * 4.0).is_some() {
+        if unit
+            .my_other_units()
+            .iter()
+            .find(|o| o.position.distance(&p) < constants.unit_radius * 4.0)
+            .is_some()
+        {
             continue;
         }
         let (units_in_firing_distance, units_not_in_firing_distance): (Vec<_>, Vec<_>) =
@@ -140,8 +167,8 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
                     e.position.distance(&p) - get_constants().unit_radius < e.firing_distance()
                         || intersects_with_obstacles_vec(&e.position, &p, obstacles)
                 });
-        let has_obstacles = intersects_with_obstacles_vec(&unit.position, &p, obstacles) ||
-            intersects_with_units_vec(&unit.position, &p, &unit.my_other_units());
+        let has_obstacles = intersects_with_obstacles_vec(&unit.position, &p, obstacles)
+            || intersects_with_units_vec(&unit.position, &p, &unit.my_other_units());
 
         let distance_to_target = p.distance(&target.position);
         let distance_score = (distance_to_target - unit.firing_distance() * 0.5).abs();

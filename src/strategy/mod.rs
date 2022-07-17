@@ -11,13 +11,13 @@ use crate::model::ActionOrder::Aim;
 use crate::model::{ActionOrder, Constants, Game, Item, Loot, Unit, UnitOrder, Vec2};
 use crate::strategy::behaviour::behaviour::Behaviour;
 use crate::strategy::behaviour::fighting::Fighting;
+use crate::strategy::behaviour::ghosting::Ghosting;
 use crate::strategy::behaviour::move_or_loot::MoveOrLoot;
 use crate::strategy::behaviour::run_and_heal::RunAndHeal;
 use crate::strategy::holder::{get_constants, get_game};
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::ops::Index;
-use crate::strategy::behaviour::ghosting::Ghosting;
 
 pub fn get_order(debug_interface: &mut Option<&mut DebugInterface>) -> model::Order {
     let game = get_game();

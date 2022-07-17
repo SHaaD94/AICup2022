@@ -1,8 +1,8 @@
 use super::*;
 use crate::strategy::holder::{get_constants, get_game, get_obstacles};
 use crate::strategy::util::rotate;
-use std::f64::consts::PI;
 use itertools::Itertools;
+use std::f64::consts::PI;
 
 /// A unit
 #[derive(Clone, Debug)]
@@ -65,10 +65,8 @@ impl Unit {
 
     pub fn ammo_for_current_weapon(&self) -> i32 {
         match self.weapon {
-            None => { 0 }
-            Some(w) => {
-                self.ammo[w as usize]
-            }
+            None => 0,
+            Some(w) => self.ammo[w as usize],
         }
     }
 
@@ -128,10 +126,10 @@ impl Unit {
 
         let forward_point = self.position.clone()
             + (self.direction.clone()
-            * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
+                * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
         let backward_point = self.position.clone()
             - (self.direction.clone()
-            * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
+                * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
         let center = (forward_point.clone() + backward_point) / 2.0;
         let radius = forward_point.distance(&center);
 
@@ -165,7 +163,7 @@ impl Unit {
             .map(|e| {
                 default_view
                     - (default_view - get_constants().weapons[e as usize].aim_field_of_view)
-                    * self.aim
+                        * self.aim
             })
             .unwrap_or(default_view)
             * PI

@@ -4,7 +4,7 @@ use crate::model::ActionOrder::{Aim, Pickup, UseShieldPotion};
 use crate::model::Item::ShieldPotions;
 use crate::model::{ActionOrder, Loot, Unit, UnitOrder, Vec2};
 use crate::strategy::holder::{
-    get_constants, get_game, get_loot, get_obstacles, get_all_enemy_units, remove_loot,
+    get_all_enemy_units, get_constants, get_game, get_loot, get_obstacles, remove_loot,
 };
 use crate::strategy::loot::best_loot;
 use crate::strategy::util::intersects_with_obstacles;
@@ -22,7 +22,13 @@ pub fn write_behaviour(
     debug_interface: &mut Option<&mut DebugInterface>,
 ) {
     if let Some(debug) = debug_interface.as_mut() {
-        let result_text = format!("{}, {}, {}, {}", text, unit.extra_lives, unit.weapon.unwrap_or(0), unit.ammo_for_current_weapon());
+        let result_text = format!(
+            "{}, {}, {}, {}",
+            text,
+            unit.extra_lives,
+            unit.weapon.unwrap_or(0),
+            unit.ammo_for_current_weapon()
+        );
         debug.add_placed_text(
             unit.position.clone() - Vec2 { x: 0.0, y: -5.0 },
             result_text,
@@ -35,8 +41,7 @@ pub fn write_behaviour(
 
 pub fn zone_penalty(p: &Vec2) -> f64 {
     let distance_to_zone_center = p.distance(&get_game().zone.current_center);
-    let zone_penalty_score = if distance_to_zone_center / &get_game().zone.current_radius > 0.9
-    {
+    let zone_penalty_score = if distance_to_zone_center / &get_game().zone.current_radius > 0.9 {
         distance_to_zone_center * 50.0
     } else {
         0.0
