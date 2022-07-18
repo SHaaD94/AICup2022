@@ -138,7 +138,7 @@ impl Unit {
         let mut cur_angle = self.direction.angle();
         let obstacles = get_obstacles(self.id);
         for _ in 0..points_around {
-            let next_vec = rotate(center.clone(), cur_angle, radius);
+            let next_vec = rotate(center, cur_angle, radius);
             let next_vec_after_some_ticks = rotate(center.clone(), cur_angle, radius * 5.0);
             let intersects_with_obstacles = obstacles
                 .iter()
