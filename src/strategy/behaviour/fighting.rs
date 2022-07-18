@@ -41,10 +41,10 @@ impl Behaviour for Fighting {
             .filter(|s| {
                 s.allies.contains(&unit.id)
                     && match s.result {
-                        FightSimResult::WON(_) => true,
-                        FightSimResult::DRAW => true,
-                        FightSimResult::LOST => false,
-                    }
+                    FightSimResult::WON(_) => true,
+                    FightSimResult::DRAW => true,
+                    FightSimResult::LOST => false,
+                }
             })
             .flat_map(|e| e.enemy_units())
             .find(|e| e.position.distance(&unit.position) < unit.firing_distance())
@@ -65,10 +65,10 @@ impl Behaviour for Fighting {
             .filter(|s| {
                 s.allies.contains(&unit.id)
                     && match s.result {
-                        FightSimResult::WON(_) => true,
-                        FightSimResult::DRAW => true,
-                        FightSimResult::LOST => false,
-                    }
+                    FightSimResult::WON(_) => true,
+                    FightSimResult::DRAW => true,
+                    FightSimResult::LOST => false,
+                }
             })
             .flat_map(|s| s.enemy_units())
             .map(|e| (e, e.position.distance(&unit.position)))
@@ -87,7 +87,7 @@ impl Behaviour for Fighting {
         let obstacles = &get_obstacles(unit.id);
         let fire_target = target.position.clone()
             + (target.velocity.clone() * unit.position.distance(&target.position)
-                / weapon.projectile_speed);
+            / weapon.projectile_speed);
 
         let intersects_with_obstacles =
             intersects_with_obstacles_vec(&unit.position, &fire_target, obstacles);
@@ -167,17 +167,20 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
                     e.position.distance(&p) - get_constants().unit_radius < e.firing_distance()
                         || intersects_with_obstacles_vec(&e.position, &p, obstacles)
                 });
-        let has_obstacles = intersects_with_obstacles_vec(&unit.position, &p, obstacles)
-            || intersects_with_units_vec(&unit.position, &p, &unit.my_other_units());
+        let has_obstacles = intersects_with_obstacles_vec(&p, &target.position, obstacles)
+            || intersects_with_units_vec(&p, &target.position, &unit.my_other_units());
 
         let distance_to_target = p.distance(&target.position);
-        let distance_score = (distance_to_target - unit.firing_distance() * 0.5).abs();
+        let best_distance = get_constants().weapons[2].firing_distance() * 0.5;
+        let distance_score = (distance_to_target - best_distance).abs();
 
         // more is better
         let score = units_not_in_firing_distance.len() as f64 * 2.0
             - units_in_firing_distance.len() as f64 * 2.0
+            // + my_units_collision_score(&p, unit)
+            // THIS IS WRONG BUT WITHOUT IT BOT PLAYS MUCH WORSE
             - my_units_magnet_score(&p, unit)
-            + if has_obstacles { -5.0 } else { 5.0 }
+            + if has_obstacles { -10.0 } else { 10.0 }
             - zone_penalty(&p)
             - distance_score;
         if best_score < score {

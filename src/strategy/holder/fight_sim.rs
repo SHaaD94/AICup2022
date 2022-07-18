@@ -4,7 +4,7 @@ use crate::model::{Obstacle, Unit, Vec2, WeaponProperties};
 use crate::strategy::behaviour::behaviour::{my_units_magnet_score, zone_penalty};
 use crate::strategy::holder::fight_sim::FightSimResult::{DRAW, LOST, WON};
 use crate::strategy::holder::{get_all_enemy_units, get_constants, get_game};
-use crate::strategy::util::{intersects_with_obstacles_vec, intersects_with_units_vec};
+use crate::strategy::util::{intersects_with_obstacles_vec};
 use itertools::{all, Itertools};
 use std::cmp::max;
 use std::collections::HashSet;
