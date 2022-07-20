@@ -29,12 +29,13 @@ impl Behaviour for Fighting {
         };
         let have_weapon_and_ammo = match unit.weapon {
             None => false,
-            Some(weapon) =>
+            Some(weapon) => {
                 if get_game().current_tick < 6000 {
                     weapon != 0 && unit.ammo[weapon as usize] != 0
                 } else {
                     unit.ammo[weapon as usize] != 0
-                },
+                }
+            }
         };
         if !have_weapon_and_ammo {
             return false;
@@ -46,18 +47,20 @@ impl Behaviour for Fighting {
             .filter(|e| e.position.distance(&unit.position) <= e.firing_distance())
             .count();
 
-        let any_sim_lost =
-            get_fight_simulations()
-                .into_iter()
-                .find(|s| {
-                    s.allies.contains(&unit.id)
-                        && s.enemy_units().iter().any(|e| e.position.distance(&unit.position) <= e.firing_distance())
-                        && match s.result {
+        let any_sim_lost = get_fight_simulations()
+            .into_iter()
+            .find(|s| {
+                s.allies.contains(&unit.id)
+                    && s.enemy_units()
+                        .iter()
+                        .any(|e| e.position.distance(&unit.position) <= e.firing_distance())
+                    && match s.result {
                         FightSimResult::WON(_) => false,
                         FightSimResult::DRAW => false,
                         FightSimResult::LOST => get_game().current_tick < 6000,
                     }
-                }).is_some();
+            })
+            .is_some();
 
         if any_sim_lost {
             return false;
@@ -69,10 +72,10 @@ impl Behaviour for Fighting {
             .filter(|s| {
                 s.allies.contains(&unit.id)
                     && match s.result {
-                    FightSimResult::WON(_) => true,
-                    FightSimResult::DRAW => true,
-                    FightSimResult::LOST => get_game().current_tick > 6000,
-                }
+                        FightSimResult::WON(_) => true,
+                        FightSimResult::DRAW => true,
+                        FightSimResult::LOST => get_game().current_tick > 6000,
+                    }
             })
             .flat_map(|e| e.enemy_units())
             .find(|e| e.position.distance(&unit.position) < unit.firing_distance())
@@ -93,10 +96,10 @@ impl Behaviour for Fighting {
             .filter(|s| {
                 s.allies.contains(&unit.id)
                     && match s.result {
-                    FightSimResult::WON(_) => true,
-                    FightSimResult::DRAW => true,
-                    FightSimResult::LOST => get_game().current_tick > 6000,
-                }
+                        FightSimResult::WON(_) => true,
+                        FightSimResult::DRAW => true,
+                        FightSimResult::LOST => get_game().current_tick > 6000,
+                    }
             })
             .flat_map(|s| s.enemy_units())
             .map(|e| (e, e.position.distance(&unit.position)))
@@ -115,7 +118,7 @@ impl Behaviour for Fighting {
         let obstacles = &get_obstacles(unit.id);
         let fire_target = target.position.clone()
             + (target.velocity.clone() * unit.position.distance(&target.position)
-            / weapon.projectile_speed);
+                / weapon.projectile_speed);
 
         let intersects_with_obstacles =
             intersects_with_obstacles_vec(&unit.position, &fire_target, obstacles);

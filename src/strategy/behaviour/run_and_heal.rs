@@ -3,29 +3,30 @@ use crate::debugging::{BLUE, GREEN, RED, TRANSPARENT_BLUE};
 use crate::model::ActionOrder::UseShieldPotion;
 use crate::model::{Unit, UnitOrder, Vec2};
 use crate::strategy::behaviour::behaviour::{my_units_magnet_score, write_behaviour, Behaviour};
-use crate::strategy::holder::{get_all_enemy_units, get_constants, get_fight_simulations, get_game, get_obstacles};
+use crate::strategy::holder::fight_sim::FightSimResult;
+use crate::strategy::holder::{
+    get_all_enemy_units, get_constants, get_fight_simulations, get_game, get_obstacles,
+};
 use crate::strategy::util::{
     bullet_trace_score, get_projectile_traces, intersects_with_obstacles, rotate,
 };
 use std::env::set_current_dir;
-use crate::strategy::holder::fight_sim::FightSimResult;
 
 pub struct RunAndHeal {}
 
 impl Behaviour for RunAndHeal {
     fn should_use(&self, unit: &Unit) -> bool {
-        let any_sim_lost =
-            get_fight_simulations()
-                .into_iter()
-                .any(|s| {
-                    s.allies.contains(&unit.id)
-                        && s.enemy_units().iter().any(|e| e.position.distance(&unit.position) <= e.firing_distance())
-                        && match s.result {
-                        FightSimResult::WON(_) => false,
-                        FightSimResult::DRAW => false,
-                        FightSimResult::LOST => true,
-                    }
-                });
+        let any_sim_lost = get_fight_simulations().into_iter().any(|s| {
+            s.allies.contains(&unit.id)
+                && s.enemy_units()
+                    .iter()
+                    .any(|e| e.position.distance(&unit.position) <= e.firing_distance())
+                && match s.result {
+                    FightSimResult::WON(_) => false,
+                    FightSimResult::DRAW => false,
+                    FightSimResult::LOST => true,
+                }
+        });
 
         if any_sim_lost && get_game().current_tick < 5000 {
             return true;

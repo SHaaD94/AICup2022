@@ -126,10 +126,10 @@ impl Unit {
 
         let forward_point = self.position.clone()
             + (self.direction.clone()
-            * (constants.max_unit_forward_speed / constants.ticks_per_second));
+                * (constants.max_unit_forward_speed / constants.ticks_per_second));
         let backward_point = self.position.clone()
             - (self.direction.clone()
-            * (constants.max_unit_backward_speed / constants.ticks_per_second));
+                * (constants.max_unit_backward_speed / constants.ticks_per_second));
         let center = (forward_point.clone() + backward_point) / 2.0;
         let radius = forward_point.distance(&center);
 
@@ -165,7 +165,7 @@ impl Unit {
             .map(|e| {
                 default_view
                     - (default_view - get_constants().weapons[e as usize].aim_field_of_view)
-                    * self.aim
+                        * self.aim
             })
             .unwrap_or(default_view)
             * PI

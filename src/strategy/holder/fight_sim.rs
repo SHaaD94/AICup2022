@@ -218,7 +218,5 @@ fn chance_to_hit(shooter_pos: &Vec2, target_pos: &Vec2, weapon: &WeaponPropertie
     let angle = (target_pos.clone() - shooter_pos.clone()).angle();
     let left = rotate(shooter_pos.clone(), angle - weapon.spread / 2.0, distance);
     let right = rotate(shooter_pos.clone(), angle + weapon.spread / 2.0, distance);
-    2.0 * get_constants().unit_radius /
-        (left.distance(target_pos) + right.distance(target_pos))
+    2.0 * get_constants().unit_radius / (left.distance(target_pos) + right.distance(target_pos))
 }
-
