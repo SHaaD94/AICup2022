@@ -29,11 +29,42 @@ impl Behaviour for Fighting {
         };
         let have_weapon_and_ammo = match unit.weapon {
             None => false,
-            Some(weapon) => unit.ammo[weapon as usize] != 0,
+            Some(weapon) => {
+                if get_game().current_tick < 6000 {
+                    weapon != 0 && unit.ammo[weapon as usize] != 0
+                } else {
+                    unit.ammo[weapon as usize] != 0
+                }
+            }
         };
         if !have_weapon_and_ammo {
             return false;
         };
+
+        let enemies_around = get_all_enemy_units()
+            .iter()
+            .filter(|e| e.remaining_spawn_time.is_none())
+            .filter(|e| e.position.distance(&unit.position) <= e.firing_distance())
+            .count();
+
+        let any_sim_lost = get_fight_simulations()
+            .into_iter()
+            .find(|s| {
+                s.allies.contains(&unit.id)
+                    && s.enemy_units()
+                        .iter()
+                        .any(|e| e.position.distance(&unit.position) <= e.firing_distance())
+                    && match s.result {
+                        FightSimResult::WON(_) => false,
+                        FightSimResult::DRAW => false,
+                        FightSimResult::LOST => get_game().current_tick < 6000,
+                    }
+            })
+            .is_some();
+
+        if any_sim_lost {
+            return false;
+        }
 
         let fight_sims = get_fight_simulations();
         fight_sims
@@ -43,7 +74,7 @@ impl Behaviour for Fighting {
                     && match s.result {
                         FightSimResult::WON(_) => true,
                         FightSimResult::DRAW => true,
-                        FightSimResult::LOST => false,
+                        FightSimResult::LOST => get_game().current_tick > 6000,
                     }
             })
             .flat_map(|e| e.enemy_units())
@@ -67,7 +98,7 @@ impl Behaviour for Fighting {
                     && match s.result {
                         FightSimResult::WON(_) => true,
                         FightSimResult::DRAW => true,
-                        FightSimResult::LOST => false,
+                        FightSimResult::LOST => get_game().current_tick > 6000,
                     }
             })
             .flat_map(|s| s.enemy_units())
@@ -167,17 +198,20 @@ fn get_best_firing_spot(unit: &Unit, target: &&Unit, obstacles: &Vec<Obstacle>) 
                     e.position.distance(&p) - get_constants().unit_radius < e.firing_distance()
                         || intersects_with_obstacles_vec(&e.position, &p, obstacles)
                 });
-        let has_obstacles = intersects_with_obstacles_vec(&unit.position, &p, obstacles)
-            || intersects_with_units_vec(&unit.position, &p, &unit.my_other_units());
+        let has_obstacles = intersects_with_obstacles_vec(&p, &target.position, obstacles)
+            || intersects_with_units_vec(&p, &target.position, &unit.my_other_units());
 
         let distance_to_target = p.distance(&target.position);
-        let distance_score = (distance_to_target - unit.firing_distance() * 0.5).abs();
+        let best_distance = get_constants().weapons[2].firing_distance() * 0.5;
+        let distance_score = (distance_to_target - best_distance).abs();
 
         // more is better
         let score = units_not_in_firing_distance.len() as f64 * 2.0
             - units_in_firing_distance.len() as f64 * 2.0
+            // + my_units_collision_score(&p, unit)
+            // THIS IS WRONG BUT WITHOUT IT BOT PLAYS MUCH WORSE
             - my_units_magnet_score(&p, unit)
-            + if has_obstacles { -5.0 } else { 5.0 }
+            + if has_obstacles { -10.0 } else { 10.0 }
             - zone_penalty(&p)
             - distance_score;
         if best_score < score {

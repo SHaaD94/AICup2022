@@ -45,7 +45,15 @@ impl Behaviour for MoveOrLoot {
                 if other.is_some() && other.unwrap().0 > 10.0 {
                     other.unwrap().1.position
                 } else {
-                    let angle = (unit.position.clone() - game.zone.current_center.clone()).angle();
+                    let angle = (get_game()
+                        .my_units()
+                        .iter()
+                        .min_by_key(|e| e.id)
+                        .unwrap()
+                        .position
+                        .clone()
+                        - game.zone.current_center.clone())
+                    .angle();
                     rotate(
                         game.zone.current_center.clone(),
                         angle + 0.1,

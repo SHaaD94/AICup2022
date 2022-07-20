@@ -4,7 +4,7 @@ use crate::model::{Obstacle, Unit, Vec2, WeaponProperties};
 use crate::strategy::behaviour::behaviour::{my_units_magnet_score, zone_penalty};
 use crate::strategy::holder::fight_sim::FightSimResult::{DRAW, LOST, WON};
 use crate::strategy::holder::{get_all_enemy_units, get_constants, get_game};
-use crate::strategy::util::{intersects_with_obstacles_vec, intersects_with_units_vec};
+use crate::strategy::util::{intersects_with_obstacles_vec, rotate};
 use itertools::{all, Itertools};
 use std::cmp::max;
 use std::collections::HashSet;
@@ -99,6 +99,7 @@ fn get_my_other_units_nearby(unit: &Unit) -> Vec<&Unit> {
 }
 
 struct FightProps {
+    position: Vec2,
     weapon: WeaponProperties,
     ammo: i32,
     aim: f64,
@@ -125,6 +126,7 @@ pub fn simulation(u1: &Vec<&Unit>, u2: &Vec<&Unit>) -> FightSimResult {
             .filter(|e| e.weapon.is_some())
             .filter(|e| e.ammo[e.weapon.unwrap() as usize] != 0)
             .map(|e| FightProps {
+                position: e.position,
                 weapon: get_constants().weapons[e.weapon.unwrap() as usize].clone(),
                 aim: e.aim,
                 ammo: e.ammo[e.weapon.unwrap() as usize],
@@ -169,7 +171,8 @@ pub fn simulation(u1: &Vec<&Unit>, u2: &Vec<&Unit>) -> FightSimResult {
                     ally.fire_tick -= ally.weapon.get_fire_rate_in_ticks();
                     for mut enemy in &mut *other_team {
                         if enemy.health > 0.0 {
-                            enemy.health -= ally.weapon.projectile_damage;
+                            enemy.health -= ally.weapon.projectile_damage
+                                * chance_to_hit(&enemy.position, &ally.position, &enemy.weapon);
                             break;
                         }
                     }
@@ -208,4 +211,12 @@ pub fn simulation(u1: &Vec<&Unit>, u2: &Vec<&Unit>) -> FightSimResult {
     } else {
         LOST
     }
+}
+
+fn chance_to_hit(shooter_pos: &Vec2, target_pos: &Vec2, weapon: &WeaponProperties) -> f64 {
+    let distance = shooter_pos.distance(target_pos);
+    let angle = (target_pos.clone() - shooter_pos.clone()).angle();
+    let left = rotate(shooter_pos.clone(), angle - weapon.spread / 2.0, distance);
+    let right = rotate(shooter_pos.clone(), angle + weapon.spread / 2.0, distance);
+    2.0 * get_constants().unit_radius / (left.distance(target_pos) + right.distance(target_pos))
 }

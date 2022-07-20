@@ -18,8 +18,9 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
             get_all_enemy_units()
                 .iter()
                 .find(|e| {
-                    e.position.distance(&l.position) + get_constants().unit_radius
-                        < e.firing_distance()
+                    get_game().current_tick < 5000
+                        && e.position.distance(&l.position) + get_constants().unit_radius
+                            < e.firing_distance()
                 })
                 .is_none()
         })
@@ -32,21 +33,19 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
         })
         .map(|l| {
             let score: i32 = match l.item {
-                Item::Weapon { type_index } => {
-                    if current_weapon.is_none() {
-                        (type_index + 1) * 10
-                    } else {
-                        if ammo[type_index as usize] == 0 {
-                            0
+                Item::Weapon { type_index } => match current_weapon {
+                    None => (type_index + 1) * 10,
+                    Some(current_weapon) => {
+                        if unit.ammo[type_index as usize] != 0
+                            && (current_weapon < type_index
+                                || (unit.ammo[current_weapon as usize] == 0))
+                        {
+                            (type_index + 1) * 10
                         } else {
-                            if current_weapon.unwrap() < type_index {
-                                (type_index + 1) * 10
-                            } else {
-                                0
-                            }
+                            0
                         }
                     }
-                }
+                },
                 Item::ShieldPotions { amount } => {
                     if unit.shield_potions < constants.max_shield_potions_in_inventory {
                         (10.0 / (unit.health / constants.unit_health)).ceil() as i32
@@ -74,8 +73,21 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
             //     Item::ShieldPotions { .. } => { "shield" }
             //     Item::Ammo { .. } => { "ammo" }
             // }, score, -l.position.distance(&unit.position) + my_units_magnet_score(&l.position, unit));
+            let enemy_score = get_all_enemy_units()
+                .iter()
+                .map(|e| {
+                    let distance = e.position.distance(&l.position);
+                    if distance <= e.firing_distance() {
+                        e.firing_distance() - distance
+                    } else {
+                        0.0
+                    }
+                })
+                .sum::<f64>()
+                * 0.1;
+
             (
-                score.clone() as f64
+                score.clone() as f64 + enemy_score
                     - l.position.distance(&unit.position)
                     - my_units_magnet_score(&l.position, unit),
                 l,
@@ -87,7 +99,11 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
 
 fn is_inside_zone(loot: &Loot) -> bool {
     let game = get_game();
-    game.zone.current_center.distance(&loot.position) + 3.0 <= game.zone.current_radius
+    let zone_speed = get_constants().zone_speed;
+    let max_speed = get_constants().max_unit_forward_speed;
+    let distance = game.zone.current_center.distance(&loot.position);
+    distance + get_constants().unit_radius
+        <= game.zone.current_radius - zone_speed * (distance / max_speed)
 }
 
 fn is_loot_needed(l: &Loot, unit: &Unit) -> bool {
@@ -96,17 +112,18 @@ fn is_loot_needed(l: &Loot, unit: &Unit) -> bool {
     let ammo = &unit.ammo;
 
     match l.item {
-        Item::Weapon { type_index } => {
-            if current_weapon.is_none() {
-                true
-            } else {
-                if current_weapon.unwrap() < type_index {
+        Item::Weapon { type_index } => match current_weapon {
+            None => true,
+            Some(current_weapon) => {
+                if unit.ammo[type_index as usize] != 0
+                    && (current_weapon < type_index || (unit.ammo[current_weapon as usize] == 0))
+                {
                     true
                 } else {
                     false
                 }
             }
-        }
+        },
         Item::ShieldPotions { amount } => {
             if unit.shield_potions < constants.max_shield_potions_in_inventory {
                 true

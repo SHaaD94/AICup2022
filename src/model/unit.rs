@@ -126,10 +126,10 @@ impl Unit {
 
         let forward_point = self.position.clone()
             + (self.direction.clone()
-                * (constants.max_unit_forward_speed / constants.ticks_per_second * 2.0));
+                * (constants.max_unit_forward_speed / constants.ticks_per_second));
         let backward_point = self.position.clone()
             - (self.direction.clone()
-                * (constants.max_unit_backward_speed / constants.ticks_per_second * 2.0));
+                * (constants.max_unit_backward_speed / constants.ticks_per_second));
         let center = (forward_point.clone() + backward_point) / 2.0;
         let radius = forward_point.distance(&center);
 
@@ -137,20 +137,22 @@ impl Unit {
         let mut res = Vec::new();
         let mut cur_angle = self.direction.angle();
         let obstacles = get_obstacles(self.id);
-        for _ in 0..points_around {
-            let next_vec = rotate(center.clone(), cur_angle, radius);
-            let next_vec_after_some_ticks = rotate(center.clone(), cur_angle, radius * 5.0);
-            let intersects_with_obstacles = obstacles
-                .iter()
-                .find(|o| {
-                    o.position.distance(&next_vec_after_some_ticks)
-                        < o.radius + get_constants().unit_radius
-                })
-                .is_some();
-            if !intersects_with_obstacles || !check_obstacles {
-                res.push(next_vec);
+        for i in 0..4 {
+            for _ in 0..points_around {
+                let next_vec = rotate(center, cur_angle, (radius * (i as f64 + 1.0)));
+                let next_vec_after_some_ticks = rotate(center.clone(), cur_angle, radius * 5.0);
+                let intersects_with_obstacles = obstacles
+                    .iter()
+                    .find(|o| {
+                        o.position.distance(&next_vec_after_some_ticks)
+                            < o.radius + get_constants().unit_radius
+                    })
+                    .is_some();
+                if !intersects_with_obstacles || !check_obstacles {
+                    res.push(next_vec);
+                }
+                cur_angle += angle_diff;
             }
-            cur_angle += angle_diff;
         }
 
         res
