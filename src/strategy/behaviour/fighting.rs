@@ -29,11 +29,39 @@ impl Behaviour for Fighting {
         };
         let have_weapon_and_ammo = match unit.weapon {
             None => false,
-            Some(weapon) => unit.ammo[weapon as usize] != 0,
+            Some(weapon) =>
+                if get_game().current_tick < 6000 {
+                    weapon != 0 && unit.ammo[weapon as usize] != 0
+                } else {
+                    unit.ammo[weapon as usize] != 0
+                },
         };
         if !have_weapon_and_ammo {
             return false;
         };
+
+        let enemies_around = get_all_enemy_units()
+            .iter()
+            .filter(|e| e.remaining_spawn_time.is_none())
+            .filter(|e| e.position.distance(&unit.position) <= e.firing_distance())
+            .count();
+
+        let any_sim_lost =
+            get_fight_simulations()
+                .into_iter()
+                .find(|s| {
+                    s.allies.contains(&unit.id)
+                        && s.enemy_units().iter().any(|e| e.position.distance(&unit.position) <= e.firing_distance())
+                        && match s.result {
+                        FightSimResult::WON(_) => false,
+                        FightSimResult::DRAW => false,
+                        FightSimResult::LOST => get_game().current_tick < 6000,
+                    }
+                }).is_some();
+
+        if any_sim_lost {
+            return false;
+        }
 
         let fight_sims = get_fight_simulations();
         fight_sims
@@ -43,7 +71,7 @@ impl Behaviour for Fighting {
                     && match s.result {
                     FightSimResult::WON(_) => true,
                     FightSimResult::DRAW => true,
-                    FightSimResult::LOST => false,
+                    FightSimResult::LOST => get_game().current_tick > 6000,
                 }
             })
             .flat_map(|e| e.enemy_units())
@@ -67,7 +95,7 @@ impl Behaviour for Fighting {
                     && match s.result {
                     FightSimResult::WON(_) => true,
                     FightSimResult::DRAW => true,
-                    FightSimResult::LOST => false,
+                    FightSimResult::LOST => get_game().current_tick > 6000,
                 }
             })
             .flat_map(|s| s.enemy_units())
