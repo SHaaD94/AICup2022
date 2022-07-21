@@ -150,13 +150,25 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
             .map(|e| e.distance(&sound.position)).min_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap_or(f64::MAX);
         if nearest_unit_distance < 5.0 { continue; };
-        if sound.type_index > 0 && sound.type_index < 4 {
-            let weapon = sound.type_index - 1;
-            let id = get_all_enemy_units().iter().map(|e| e.id).min().unwrap_or(0) - 1;
+        let id = get_all_enemy_units().iter().map(|e| e.id).min().unwrap_or(0) - 1;
+        if sound.type_index == 0 {
             let imaginary_unit = Unit {
                 id,
                 position: sound.position.clone(),
-                weapon: Some(weapon as i32),
+                weapon: Some(2),
+                health: get_constants().unit_health.clone(),
+                ammo: Vec::from([100, 100, 100, 100]),
+                ..Unit::default()
+            };
+            units_hashmap.insert(id, (unit_ttl, imaginary_unit));
+            continue;
+        }
+        if sound.type_index > 0 && sound.type_index < 4 {
+            let weapon = sound.type_index - 1;
+            let imaginary_unit = Unit {
+                id,
+                position: sound.position.clone(),
+                weapon: None,
                 health: get_constants().unit_health.clone(),
                 ammo: Vec::from([100, 100, 100, 100]),
                 ..Unit::default()
