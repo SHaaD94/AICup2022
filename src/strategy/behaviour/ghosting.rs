@@ -5,7 +5,7 @@ use crate::model::{Game, Loot, Unit, UnitOrder, Vec2};
 use crate::strategy::behaviour::behaviour::{
     my_units_collision_score, write_behaviour, zone_penalty, Behaviour,
 };
-use crate::strategy::holder::{get_constants, get_game, get_loot, remove_loot};
+use crate::strategy::holder::{book_loot, get_constants, get_game, get_loot, remove_loot};
 use crate::strategy::loot::best_loot;
 use crate::strategy::util::{bullet_trace_score, get_projectile_traces, rotate};
 
@@ -70,6 +70,9 @@ fn loot_or_near_the_zone(unit: &Unit, game: &Game) -> Vec2 {
             (unit.position.clone() - game.zone.current_center.clone()).angle() + 0.1,
             game.zone.current_radius * 0.85,
         ),
-        Some(loot) => loot.position,
+        Some(loot) => {
+            book_loot(loot.id);
+            loot.position
+        }
     }
 }

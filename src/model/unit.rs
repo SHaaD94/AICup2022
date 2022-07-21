@@ -137,7 +137,7 @@ impl Unit {
         let mut res = Vec::new();
         let mut cur_angle = self.direction.angle();
         let obstacles = get_obstacles(self.id);
-        for i in 0..4 {
+        for i in 0..3 {
             for _ in 0..points_around {
                 let next_vec = rotate(center, cur_angle, (radius * (i as f64 + 1.0)));
                 let next_vec_after_some_ticks = rotate(center.clone(), cur_angle, radius * 5.0);
