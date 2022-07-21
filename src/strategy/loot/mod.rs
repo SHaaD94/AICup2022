@@ -18,7 +18,7 @@ pub fn best_loot(unit: &Unit, loots: &Vec<Loot>, intersecting: bool) -> Option<L
             get_all_enemy_units()
                 .iter()
                 .find(|e| {
-                    get_game().current_tick < 5000
+                    get_game().current_tick < 6000
                         && e.position.distance(&l.position) + get_constants().unit_radius
                             < e.firing_distance()
                 })

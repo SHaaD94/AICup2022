@@ -34,7 +34,7 @@ impl MyStrategy {
         update_game(game, debug_interface);
 
         if let Some(debug) = debug_interface.as_mut() {
-            // Self::draw_sounds(debug);
+            Self::draw_sounds(debug);
             // Self::draw_vision(debug);
             Self::draw_units(debug);
             Self::draw_points_around(debug);
@@ -100,8 +100,17 @@ impl MyStrategy {
         for x in &get_game().sounds {
             debug.add_circle(
                 x.position.clone(),
-                0.5 * ((x.type_index + 1) as f64),
+                0.5,
                 YELLOW.clone(),
+            );
+            debug.add_placed_text(Vec2 {
+                y: x.position.y - 2.0,
+                ..x.position.clone()
+            },
+                                  get_constants().sounds[x.type_index as usize].name.clone(),
+                                  Vec2 { x: 0.0, y: 0.0 },
+                                  0.5,
+                                  RED.clone(),
             )
         }
     }

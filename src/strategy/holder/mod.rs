@@ -6,6 +6,7 @@ use crate::model::{Constants, Game, Loot, Obstacle, Projectile, Unit, Vec2};
 use crate::strategy::holder::fight_sim::{create_fight_simulations, FightSim};
 use itertools::Itertools;
 use std::collections::HashMap;
+use crate::strategy::util::intersects_with_obstacles_vec;
 
 static mut GAME: Game = Game::const_default();
 static mut CONSTANTS: Constants = Constants::const_default();
@@ -135,8 +136,37 @@ fn update_units(game: &Game, debug_interface: &mut Option<&mut DebugInterface>) 
         }
     }
 
+    // Steps 0.05 10
+    // Wand 0.1 30
+    // Staff 0.1 40
+    // Bow 0.1 20
+    // WandHit 0.15 40
+    // StaffHit 0.15 40
+    // BowHit 0.15 40
+    // add units from sounds
+    for sound in &get_game().sounds {
+        if inside_vision(game, &sound.position) { continue; };
+        let nearest_unit_distance = get_all_enemy_units().iter().map(|e| e.position).chain(get_game().my_units().iter().map(|e| e.position))
+            .map(|e| e.distance(&sound.position)).min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap_or(f64::MAX);
+        if nearest_unit_distance < 5.0 { continue; };
+        if sound.type_index > 0 && sound.type_index < 4 {
+            let weapon = sound.type_index - 1;
+            let id = get_all_enemy_units().iter().map(|e| e.id).min().unwrap_or(0) - 1;
+            let imaginary_unit = Unit {
+                id,
+                position: sound.position.clone(),
+                weapon: Some(weapon as i32),
+                health: get_constants().unit_health.clone(),
+                ammo: Vec::from([100, 100, 100, 100]),
+                ..Unit::default()
+            };
+            units_hashmap.insert(id, (unit_ttl, imaginary_unit));
+        }
+    }
+
     unsafe { UNIT_TO_TICK = units_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { UNITS = units_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
+    unsafe { UNITS = units_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
 }
 
 fn update_loot(game: &Game) {
@@ -153,7 +183,7 @@ fn update_loot(game: &Game) {
         }
     }
     unsafe { LOOT_TO_TICK = loot_hashmap.iter().map(|e| e.1.clone()).collect_vec() };
-    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1 .1.clone()).collect_vec() };
+    unsafe { LOOT = loot_hashmap.iter().map(|e| e.1.1.clone()).collect_vec() };
 }
 
 fn update_projectiles(game: &Game) {
@@ -206,16 +236,17 @@ fn update_projectiles(game: &Game) {
 }
 
 fn inside_vision(game: &Game, x: &Vec2) -> bool {
-    game.my_units()
+    let is_in_vision_sector = game.my_units()
         .iter()
         .filter(|e| e.position.distance(x) <= get_constants().view_distance)
-        .find(|u| {
+        .any(|u| {
             let (left_angle, right_angle) = u.view_segment_angles();
             let angle = (x.clone() - u.position.clone()).angle();
             (left_angle >= angle && right_angle <= angle)
                 || (left_angle <= angle && right_angle >= angle)
-        })
-        .is_some()
+        });
+    // TODO vision control in blocking vision
+    is_in_vision_sector // && (!get_constants().view_blocking || intersects_with_obstacles_vec()
 }
 
 fn set_nearest_obstacles(game: &Game, constants: &Constants) {
